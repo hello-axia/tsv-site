@@ -7,8 +7,26 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (!profile) {
+        return NextResponse.redirect(`${origin}/onboarding`)
+      }
+
+      if (profile.role === 'teacher') {
+        return NextResponse.redirect(`${origin}/dashboard`)
+      }
+
+      return NextResponse.redirect(`${origin}/lesson`)
+    }
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`)
+  return NextResponse.redirect(`${origin}/?error=oauth`)
 }
