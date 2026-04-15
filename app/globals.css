@@ -1,26 +1,332 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* TSV — white background variant of TPV */
+  --bg:           #ffffff;
+  --bg2:          #f9f7f4;
+  --bg3:          #f0ede8;
+  --bg-hover:     #e8e4de;
+
+  --text:         #1a1a14;
+  --text-dim:     #3a3830;
+  --text-faint:   #8a8278;
+
+  --gold:         #9a7238;
+  --gold-dim:     rgba(154,114,56,0.10);
+  --gold-line:    rgba(154,114,56,0.28);
+
+  --border:       #e8e2d9;
+  --border-light: #d4ccc0;
+
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+
+  --space-xs:  0.375rem;
+  --space-sm:  0.75rem;
+  --space-md:  1.25rem;
+  --space-lg:  2rem;
+  --space-xl:  3.5rem;
+  --space-2xl: 6rem;
+
+  --max-content: 680px;
+  --max-shell:   1100px;
+
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --header-bg: rgba(255,255,255,0.95);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---- Reset ---- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: 17px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ---- Typography ---- */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); }
+h2 { font-size: clamp(1.35rem, 3vw, 1.85rem); }
+h3 { font-size: clamp(1.1rem, 2.5vw, 1.35rem); }
+
+p {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+a:hover { opacity: 0.75; }
+
+/* ---- Utility ---- */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.muted {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+
+.divider {
+  width: 36px;
+  height: 2px;
+  background: var(--gold);
+  margin: 1.25rem 0;
+}
+
+.divider-full {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-lg) 0;
+}
+
+/* ---- Layout ---- */
+.shell {
+  width: 100%;
+  max-width: var(--max-shell);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.content {
+  width: 100%;
+  max-width: var(--max-content);
+  margin: 0 auto;
+}
+
+/* ---- Cards ---- */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: var(--space-md) var(--space-lg);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.card:hover {
+  border-color: var(--border-light);
+  background: var(--bg3);
+}
+
+/* ---- Buttons ---- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--text);
+  color: var(--gold);
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primary:hover { opacity: 0.85; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold-line);
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+}
+
+/* ---- Prose ---- */
+.prose {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--text-dim);
+}
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  color: var(--text);
+  margin-top: 3rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose h3 {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose p { margin-bottom: 1.25rem; }
+
+.prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--gold);
+  border-bottom: 1px solid var(--gold-line);
+}
+
+.prose a:hover { border-color: var(--gold); opacity: 1; }
+
+/* ---- Badges ---- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  margin-left: 6px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.badge-values     { background: rgba(154,114,56,0.1);  color: #7a5a28; border: 1px solid rgba(154,114,56,0.25); }
+.badge-facts      { background: rgba(41,128,185,0.1);  color: #1a5a8a; border: 1px solid rgba(41,128,185,0.25); }
+.badge-forecasts  { background: rgba(46,204,113,0.1);  color: #1a7a4a; border: 1px solid rgba(46,204,113,0.25); }
+.badge-incentives { background: rgba(231,76,60,0.1);   color: #a02a1a; border: 1px solid rgba(231,76,60,0.25); }
+
+/* ---- Callouts ---- */
+.callout {
+  border-left: 2px solid var(--gold);
+  background: var(--gold-dim);
+  padding: 1rem 1.25rem;
+  margin: 2rem 0;
+  border-radius: 0 3px 3px 0;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+
+/* ---- Two sides ---- */
+.two-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 2rem 0;
+  background: var(--border);
+}
+
+.side-card {
+  background: var(--bg2);
+  padding: 1.25rem 1.5rem;
+}
+
+.side-card.blue { border-top: 2px solid #2980b9; }
+.side-card.red  { border-top: 2px solid #e74c3c; }
+
+.side-label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.85rem;
+}
+
+.side-card.blue .side-label { color: #2980b9; }
+.side-card.red  .side-label { color: #e74c3c; }
+
+/* ---- Animations ---- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up { animation: fadeUp 0.5s var(--ease-out) forwards; }
+.fade-up-delay-1 { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; animation-name: fadeUp; animation-duration: 0.5s; animation-timing-function: var(--ease-out); }
+.fade-up-delay-2 { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; animation-name: fadeUp; animation-duration: 0.5s; animation-timing-function: var(--ease-out); }
+.fade-up-delay-3 { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; animation-name: fadeUp; animation-duration: 0.5s; animation-timing-function: var(--ease-out); }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* ---- Selection ---- */
+::selection {
+  background: var(--gold-dim);
+  color: var(--text);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  :root {
+    --space-lg: 1.25rem;
+    --space-xl: 2.5rem;
+    --space-2xl: 4rem;
+  }
+  .shell { padding: 0 1.25rem; }
+  .two-sides { grid-template-columns: 1fr; }
 }
