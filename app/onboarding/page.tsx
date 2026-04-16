@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const searchParams = useSearchParams()
   const role = (searchParams.get('role') ?? 'student') as 'student' | 'teacher'
 
@@ -57,7 +57,6 @@ export default function OnboardingPage() {
         .insert({ class_id: classData.id, student_id: user.id })
 
       router.push('/lesson')
-
     } else {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -89,16 +88,16 @@ export default function OnboardingPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f7f4', fontFamily: 'sans-serif' }}>
       <div style={card}>
         <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c8a96e', marginBottom: '0.5rem' }}>
-          The Student's Verdict
+          The Student&apos;s Verdict
         </p>
 
         {step === 'name' && (
           <>
             <h1 style={{ fontSize: '1.5rem', fontFamily: 'Georgia, serif', color: '#1a1a14', marginBottom: '0.25rem' }}>
-              What's your name?
+              What&apos;s your name?
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#8a8a7a', marginBottom: '2rem' }}>
-              This is how you'll appear to your {role === 'teacher' ? 'students' : 'teacher'}.
+              This is how you&apos;ll appear to your {role === 'teacher' ? 'students' : 'teacher'}.
             </p>
 
             <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#5a5a4a', display: 'block', marginBottom: '0.5rem' }}>
@@ -170,5 +169,13 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#f9f7f4' }} />}>
+      <OnboardingForm />
+    </Suspense>
   )
 }
