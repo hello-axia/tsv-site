@@ -34,14 +34,16 @@ function OnboardingForm() {
     if (!user) { router.push('/'); return }
 
     if (role === 'student') {
-      const { data: classData } = await supabase
+      const { data: classData, error: classError } = await supabase
         .from('classes')
         .select('id, school_id')
         .eq('class_code', classCode.toUpperCase().trim())
         .single()
 
+      console.log('class lookup:', classData, classError)
+
       if (!classData) {
-        setError('Class code not found. Check with your teacher.')
+        setError(classError?.message ?? 'Class code not found. Check with your teacher.')
         setLoading(false)
         return
       }
@@ -52,11 +54,22 @@ function OnboardingForm() {
 
       if (profileError) { setError(profileError.message); setLoading(false); return }
 
-      await supabase
-        .from('class_enrollments')
-        .insert({ class_id: classData.id, student_id: user.id })
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
 
-      router.push('/lesson')
+      console.log('profile lookup:', profileData, 'user.id:', user.id)
+
+      if (profileData) {
+        const { error: enrollError } = await supabase
+          .from('class_enrollments')
+          .insert({ class_id: classData.id, student_id: profileData.id })
+        console.log('enroll error:', enrollError)
+      }
+
+        router.push('/student/dashboard')
     } else {
       const { error: profileError } = await supabase
         .from('profiles')

@@ -1,15 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import AddClassForm from './add-class-form'
 
-export default async function AccountPage() {
+export default async function StudentAccountPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, display_name')
+    .select('display_name, role')
     .eq('user_id', user.id)
     .single()
 
@@ -22,8 +21,6 @@ export default async function AccountPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
-
-        {/* Profile box */}
         <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '1.5rem' }}>
           <div className="eyebrow" style={{ marginBottom: '1rem' }}>Profile</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -37,7 +34,7 @@ export default async function AccountPage() {
             </div>
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.35rem' }}>Role</div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text)' }}>Teacher</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text)' }}>Student</div>
             </div>
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.35rem' }}>Member Since</div>
@@ -50,15 +47,6 @@ export default async function AccountPage() {
             </div>
           </div>
         </div>
-
-        {/* Classes box */}
-        {profile && (
-          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '1.5rem' }}>
-            <div className="eyebrow" style={{ marginBottom: '1rem' }}>Classes</div>
-            <AddClassForm profileId={profile.id} />
-          </div>
-        )}
-
       </div>
     </main>
   )

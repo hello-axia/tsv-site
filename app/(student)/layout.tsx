@@ -1,33 +1,33 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import TeacherNav from './nav'
+import StudentNav from './nav'
 
-export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
+export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  // Get teacher's profile id
+  // Get profile id first
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
     .eq('user_id', user.id)
     .single()
 
-  // Get teacher's classes
-  let classes: { id: string; name: string; class_code: string }[] = []
+  // Get class name via enrollment
+  let className = 'AP Gov'
   if (profile) {
-    const { data } = await supabase
-      .from('classes')
-      .select('id, name, class_code')
-      .eq('teacher_id', profile.id)
-    classes = data ?? []
+    const { data: enrollment } = await supabase
+      .from('class_enrollments')
+      .select('classes(name)')
+      .eq('student_id', profile.id)
+      .single()
+    className = (enrollment?.classes as any)?.name ?? 'AP Gov'
   }
-  
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg2)', fontFamily: 'var(--font-body)' }}>
-      <TeacherNav classes={classes} />
+      <StudentNav className={className} />
       <div style={{ flex: 1 }}>
         {children}
       </div>

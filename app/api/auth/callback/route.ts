@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         .single()
 
       if (profile) {
-        const dest = profile.role === 'teacher' ? '/dashboard' : '/lesson'
+        const dest = profile.role === 'teacher' ? '/dashboard' : '/student/dashboard'
         return NextResponse.redirect(`${origin}${dest}`)
       }
 
