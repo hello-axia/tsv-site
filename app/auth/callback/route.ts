@@ -6,25 +6,31 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const role = searchParams.get('role') ?? 'student'
 
-  if (code) {
-    const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single()
-
-      if (profile) {
-        const dest = profile.role === 'teacher' ? '/dashboard' : '/student/dashboard'
-        return NextResponse.redirect(`${origin}${dest}`)
-      }
-
-      return NextResponse.redirect(`${origin}/onboarding?role=${role}`)
-    }
+  if (!code) {
+    return NextResponse.redirect(`${origin}/?error=oauth`)
   }
 
-  return NextResponse.redirect(`${origin}/?error=oauth`)
+  const supabase = await createClient()
+  const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (sessionError || !sessionData?.session?.user) {
+    return NextResponse.redirect(`${origin}/?error=oauth`)
+  }
+
+  const userId = sessionData.session.user.id
+
+  // Force a fresh client read so the cookie context is in place
+  // before we query profiles (this is the race condition fix)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (profile) {
+    const dest = profile.role === 'teacher' ? '/dashboard' : '/student/dashboard'
+    return NextResponse.redirect(`${origin}${dest}`)
+  }
+
+  return NextResponse.redirect(`${origin}/onboarding?role=${role}`)
 }

@@ -153,8 +153,8 @@ a:hover { opacity: 0.75; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--text);
-  color: var(--gold);
+  background: var(--gold);
+  color: #fff;
   border: none;
   border-radius: 3px;
   font-family: var(--font-body);
@@ -1003,4 +1003,54 @@ a:hover { opacity: 0.75; }
     top: 0.85rem;
     left: -1.4rem;
   }
+}
+
+/* Dashboard cards */
+.dash-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.dash-card-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.dash-card-value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--text);
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+.dash-card-sub {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  flex: 1;
+}
+.dash-card-action {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+  transition: opacity 0.15s;
+}
+.dash-card-action:hover {
+  opacity: 0.7;
+}
+.dash-up-next-row:hover {
+  background: var(--bg2);
+}
+.dash-up-next-row:last-child {
+  border-bottom: none !important;
 }

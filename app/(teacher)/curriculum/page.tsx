@@ -1,5 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import ClassSelector from '../_components/class-selector'
+import AssignButton from './assign-button'
+import ActiveLessonBanner from './active-lesson-banner'
 
 const UNITS = [
   { unit: 1, title: 'How to Think Like a Citizen', lessons: [
@@ -75,29 +79,83 @@ const UNITS = [
 ]
 
 type LessonRow = { id: string; unit: number; lesson_number: number; status: string }
+type Assignment = { id: string; lesson_id: string; status: string }
 
 export default async function CurriculumPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile) redirect('/onboarding?role=teacher')
+
+  const { data: classes } = await supabase
+    .from('classes')
+    .select('id, class_code, name')
+    .eq('teacher_id', profile.id)
+    .order('name')
+
+  const cookieStore = await cookies()
+  const selectedClassCookie = cookieStore.get('selected_class_id')?.value
+  const selectedClassId = (classes ?? []).find(c => c.id === selectedClassCookie)?.id
+    ?? classes?.[0]?.id
+    ?? null
+
   const { data: lessonRows } = await supabase
     .from('lessons')
-    .select('id, unit, lesson_number, status')
+    .select('id, unit, lesson_number, status, title')
 
-  // Build a lookup map: "unit-lessonnum" -> { id, status }
   const lessonMap: Record<string, LessonRow> = {}
+  const lessonById: Record<string, LessonRow & { title: string }> = {}
   for (const row of lessonRows ?? []) {
     lessonMap[`${row.unit}-${row.lesson_number}`] = row
+    lessonById[row.id] = row as any
+  }
+
+  // Get assignments for selected class
+  const assignmentMap: Record<string, Assignment> = {}
+  let activeAssignment: (Assignment & { lesson?: any }) | null = null
+
+  if (selectedClassId) {
+    const { data: assignments } = await supabase
+      .from('lesson_assignments')
+      .select('id, lesson_id, status')
+      .eq('class_id', selectedClassId)
+
+    for (const a of assignments ?? []) {
+      assignmentMap[a.lesson_id] = a
+      if (a.status === 'active') {
+        activeAssignment = { ...a, lesson: lessonById[a.lesson_id] }
+      }
+    }
   }
 
   return (
-    <main style={{ flex: 1, padding: '2.5rem' }}>
+    <main style={{ flex: 1, padding: '2.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
         <div className="eyebrow" style={{ marginBottom: '0.5rem' }}>Curriculum</div>
         <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>AP Government</h1>
         <p style={{ color: 'var(--text-faint)', fontSize: '0.875rem' }}>62 lessons across 5 units.</p>
       </div>
+
+      {classes && classes.length > 0 && (
+        <ClassSelector classes={classes} selectedId={selectedClassId} />
+      )}
+
+      {activeAssignment && activeAssignment.lesson && (
+        <ActiveLessonBanner
+          assignmentId={activeAssignment.id}
+          lessonTitle={(activeAssignment.lesson as any).title}
+          lessonId={activeAssignment.lesson_id}
+          unit={(activeAssignment.lesson as any).unit}
+          lessonNumber={(activeAssignment.lesson as any).lesson_number}
+        />
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {UNITS.map((u) => (
@@ -112,32 +170,81 @@ export default async function CurriculumPage() {
             {u.lessons.map((l) => {
               const row = lessonMap[`${u.unit}-${l.num}`]
               const published = row?.status === 'published'
+              const assignment = row ? assignmentMap[row.id] : undefined
+              const lessonStatus = assignment?.status // 'active' | 'completed' | undefined
               return (
                 <div key={l.num} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', color: 'var(--gold)', minWidth: '32px' }}>{u.unit}.{l.num}</span>
                   {row ? (
                     <a
                       href={`/lessons/${row.id}`}
-                      style={{ fontSize: '0.85rem', color: 'var(--text)', textDecoration: 'none' }}
+                      style={{ fontSize: '0.85rem', color: 'var(--text)', textDecoration: 'none', flex: 1 }}
                     >
                       {l.title}
                     </a>
                   ) : (
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text)' }}>{l.title}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text)', flex: 1 }}>{l.title}</span>
                   )}
-                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{
                       fontSize: '0.7rem',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      color: published ? '#6abf7b' : 'var(--text-faint)',
+                      color: published ? '#4a8a5a' : 'var(--text-faint)',
                       fontWeight: 600,
                     }}>
                       {published ? 'Published' : 'Draft'}
                     </span>
-                    <button style={{ padding: '0.35rem 0.85rem', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', background: 'transparent', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text-dim)', cursor: 'pointer' }}>
-                      Assign
-                    </button>
+                    {row && published && selectedClassId ? (
+                      lessonStatus === 'completed' ? (
+                        <span style={{
+                          padding: '0.35rem 0.85rem',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                          color: '#4a8a5a',
+                          background: 'rgba(106,191,123,0.12)',
+                          border: '1px solid rgba(106,191,123,0.3)',
+                          borderRadius: '4px',
+                        }}>
+                          ✓ Completed
+                        </span>
+                      ) : lessonStatus === 'active' ? (
+                        <span style={{
+                          padding: '0.35rem 0.85rem',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                          color: 'var(--gold)',
+                          background: 'var(--gold-dim)',
+                          border: '1px solid var(--gold)',
+                          borderRadius: '4px',
+                        }}>
+                          ● Active
+                        </span>
+                      ) : (
+                        <AssignButton
+                          lessonId={row.id}
+                          classId={selectedClassId}
+                          disabled={!!activeAssignment}
+                        />
+                      )
+                    ) : (
+                      <span style={{
+                        padding: '0.35rem 0.85rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-faint)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                      }}>
+                        —
+                      </span>
+                    )}
                   </div>
                 </div>
               )
