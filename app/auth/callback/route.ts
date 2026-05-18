@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const role = searchParams.get('role') ?? 'student'
+  const roleParam = searchParams.get('role') ?? 'student'
 
   if (!code) {
     return NextResponse.redirect(`${origin}/?error=oauth`)
@@ -19,18 +19,13 @@ export async function GET(request: Request) {
 
   const userId = sessionData.session.user.id
 
-  // Force a fresh client read so the cookie context is in place
-  // before we query profiles (this is the race condition fix)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', userId)
-    .maybeSingle()
+  const { data: profileRole, error: roleError } = await supabase
+    .rpc('profile_role_for_user', { p_user_id: userId })
 
-  if (profile) {
-    const dest = profile.role === 'teacher' ? '/dashboard' : '/student/dashboard'
+  if (profileRole) {
+    const dest = profileRole === 'teacher' ? '/dashboard' : '/student/dashboard'
     return NextResponse.redirect(`${origin}${dest}`)
   }
 
-  return NextResponse.redirect(`${origin}/onboarding?role=${role}`)
+  return NextResponse.redirect(`${origin}/onboarding?role=${roleParam}`)
 }

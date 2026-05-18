@@ -140,7 +140,7 @@ export default async function CurriculumPage() {
       <div style={{ marginBottom: '2rem' }}>
         <div className="eyebrow" style={{ marginBottom: '0.5rem' }}>Curriculum</div>
         <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>AP Government</h1>
-        <p style={{ color: 'var(--text-faint)', fontSize: '0.875rem' }}>62 lessons across 5 units.</p>
+        <p style={{ color: 'var(--text-faint)', fontSize: '0.875rem' }}>60 lessons across 5 units.</p>
       </div>
 
       {classes && classes.length > 0 && (
