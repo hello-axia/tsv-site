@@ -7,7 +7,7 @@ import ActiveLessonBanner from './active-lesson-banner'
 import { CURRICULUM, LESSON_COUNT } from '@/lib/curriculum'
 
 type LessonRow = { id: string; slug: string | null; unit: number; lesson_number: number; title: string; status: string }
-type Assignment = { id: string; lesson_id: string; status: string }
+type Assignment = { id: string; lesson_id: string; status: string; current_step: string | null }
 
 export default async function CurriculumPage() {
   const supabase = await createClient()
@@ -48,18 +48,20 @@ export default async function CurriculumPage() {
 
   // Assignments for selected class.
   const assignmentByLessonId: Record<string, Assignment> = {}
-  let activeAssignment: (Assignment & { lesson?: LessonRow }) | null = null
+  let currentAssignment: (Assignment & { lesson?: LessonRow }) | null = null
 
   if (selectedClassId) {
     const { data: assignments } = await supabase
       .from('lesson_assignments')
-      .select('id, lesson_id, status')
+      .select('id, lesson_id, status, current_step')
       .eq('class_id', selectedClassId)
 
     for (const a of (assignments ?? []) as Assignment[]) {
       assignmentByLessonId[a.lesson_id] = a
-      if (a.status === 'active') {
-        activeAssignment = { ...a, lesson: lessonById[a.lesson_id] }
+      // The "current" assignment is the one not_started, live, or paused.
+      // Completed assignments are history.
+      if (a.status === 'not_started' || a.status === 'live' || a.status === 'paused') {
+        currentAssignment = { ...a, lesson: lessonById[a.lesson_id] }
       }
     }
   }
@@ -78,14 +80,15 @@ export default async function CurriculumPage() {
         <ClassSelector classes={classes} selectedId={selectedClassId} />
       )}
 
-      {activeAssignment && activeAssignment.lesson && (
+{currentAssignment && currentAssignment.lesson && (
         <ActiveLessonBanner
-          assignmentId={activeAssignment.id}
-          lessonTitle={activeAssignment.lesson.title}
-          lessonId={activeAssignment.lesson_id}
-          unit={activeAssignment.lesson.unit}
-          lessonNumber={activeAssignment.lesson.lesson_number}
-        />
+        assignmentId={currentAssignment.id}
+        lessonTitle={currentAssignment.lesson.title}
+        lessonId={currentAssignment.lesson_id}
+        unit={currentAssignment.lesson.unit}
+        lessonNumber={currentAssignment.lesson.lesson_number}
+        status={currentAssignment.status as 'not_started' | 'live' | 'paused' | 'completed'}
+      />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -128,38 +131,22 @@ export default async function CurriculumPage() {
                     </span>
                     {row && published && selectedClassId ? (
                       lessonStatus === 'completed' ? (
-                        <span style={{
-                          padding: '0.35rem 0.85rem',
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                          color: '#4a8a5a',
-                          background: 'rgba(106,191,123,0.12)',
-                          border: '1px solid rgba(106,191,123,0.3)',
-                          borderRadius: '4px',
-                        }}>
+                        <span style={badgeStyle('#4a8a5a', 'rgba(106,191,123,0.12)', 'rgba(106,191,123,0.3)')}>
                           ✓ Completed
                         </span>
-                      ) : lessonStatus === 'active' ? (
-                        <span style={{
-                          padding: '0.35rem 0.85rem',
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                          color: 'var(--gold)',
-                          background: 'var(--gold-dim)',
-                          border: '1px solid var(--gold)',
-                          borderRadius: '4px',
-                        }}>
-                          ● Active
+                      ) : lessonStatus === 'live' || lessonStatus === 'paused' ? (
+                        <span style={badgeStyle('var(--gold)', 'var(--gold-dim)', 'var(--gold)')}>
+                          {lessonStatus === 'live' ? '● Live' : '⏸ Paused'}
+                        </span>
+                      ) : lessonStatus === 'not_started' ? (
+                        <span style={badgeStyle('var(--text-dim)', 'var(--bg2)', 'var(--border)')}>
+                          Queued
                         </span>
                       ) : (
                         <AssignButton
                           lessonId={row.id}
                           classId={selectedClassId}
-                          disabled={!!activeAssignment}
+                          disabled={!!currentAssignment}
                         />
                       )
                     ) : (
@@ -183,6 +170,23 @@ export default async function CurriculumPage() {
           </div>
         ))}
       </div>
+
+      
     </main>
+    
   )
+}
+
+function badgeStyle(color: string, bg: string, border: string) {
+  return {
+    padding: '0.35rem 0.85rem',
+    fontSize: '0.7rem',
+    fontWeight: 600 as const,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase' as const,
+    color,
+    background: bg,
+    border: `1px solid ${border}`,
+    borderRadius: '4px',
+  }
 }

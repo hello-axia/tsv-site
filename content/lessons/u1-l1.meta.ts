@@ -37,7 +37,7 @@ export const meta: LessonMeta = {
       { key: 'disengaged',
         label: 'Disengaged & Unbothered — politics doesn\'t really affect me, and I don\'t pay attention' },
     ],
-    writtenPrompt: 'Why are you there? Be honest — not what sounds good, what\'s actually true for you right now.',
+    writtenPrompt: 'Why are you there? What could change where you are currently positioned?',
     unitCapability: 'thinking_reasoning',
     privacyTier: 1,
   },

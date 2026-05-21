@@ -3,12 +3,18 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import ClassSelector from '../_components/class-selector'
 
+type CurrentLesson = {
+  id: string
+  title: string
+  unit: number
+  lesson_number: number
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  // Get teacher profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, display_name')
@@ -17,7 +23,6 @@ export default async function DashboardPage() {
 
   if (!profile) redirect('/onboarding?role=teacher')
 
-  // Fetch all classes for this teacher
   const { data: classes } = await supabase
     .from('classes')
     .select('id, class_code, name')
@@ -31,43 +36,45 @@ export default async function DashboardPage() {
     ?? null
   const selectedClass = (classes ?? []).find(c => c.id === selectedClassId) ?? null
 
-  let currentLesson: any = null
-  let pendingStudents: { id: string; full_name: string | null }[] = []
+  let currentAssignment: { id: string; status: string; lesson: CurrentLesson } | null = null
   let totalEnrolled = 0
+  let ledgerSubmittedCount = 0
 
   if (selectedClassId) {
+    // Find the current (live/paused/not_started) assignment.
     const { data: recentAssignment } = await supabase
       .from('lesson_assignments')
-      .select('lesson_id, assigned_date, lessons(id, title, unit, lesson_number, overview)')
+      .select('id, status, lesson_id, lessons(id, title, unit, lesson_number)')
       .eq('class_id', selectedClassId)
-      .eq('status', 'active')
+      .in('status', ['not_started', 'live', 'paused'])
       .maybeSingle()
 
-    currentLesson = recentAssignment?.lessons ?? null
+    if (recentAssignment && recentAssignment.lessons) {
+      currentAssignment = {
+        id: recentAssignment.id,
+        status: recentAssignment.status,
+        lesson: recentAssignment.lessons as unknown as CurrentLesson,
+      }
+    }
 
     const { data: enrollments } = await supabase
       .from('class_enrollments')
-      .select('student_id, profiles(id, full_name)')
+      .select('student_id')
       .eq('class_id', selectedClassId)
 
     totalEnrolled = enrollments?.length ?? 0
 
-    if (currentLesson && enrollments && enrollments.length > 0) {
-      const studentIds = enrollments.map((e: any) => e.student_id)
-      const { data: responses } = await supabase
-        .from('lesson_responses')
-        .select('student_id')
-        .eq('lesson_id', currentLesson.id)
-        .in('student_id', studentIds)
-        .not('poll_option_id', 'is', null)
-
-      const respondedSet = new Set((responses ?? []).map(r => r.student_id))
-      pendingStudents = enrollments
-        .filter((e: any) => !respondedSet.has(e.student_id))
-        .map((e: any) => ({ id: e.profiles?.id, full_name: e.profiles?.full_name }))
+    // For a live/paused assignment, count Ledger submissions so far.
+    if (currentAssignment && (currentAssignment.status === 'live' || currentAssignment.status === 'paused')) {
+      const { count } = await supabase
+        .from('ledger_entries')
+        .select('id', { count: 'exact', head: true })
+        .eq('assignment_id', currentAssignment.id)
+      ledgerSubmittedCount = count ?? 0
     }
   }
 
+  // "Up Next" — published lessons not yet assigned to this class.
   const { data: allLessons } = await supabase
     .from('lessons')
     .select('id, unit, lesson_number, title, status')
@@ -119,64 +126,55 @@ export default async function DashboardPage() {
 
       {selectedClass && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="dash-card">
               <div className="dash-card-label">Today&apos;s Session</div>
-              {currentLesson ? (
+              {currentAssignment ? (
                 <>
-                  <div className="dash-card-value"><span style={{ color: 'var(--gold)' }}>●</span> Ready to teach</div>
-                  <div className="dash-card-sub">{currentLesson.title}</div>
-                  <a href="/live" className="dash-card-action">Start Live Session →</a>
+                  <div className="dash-card-value">
+                    {currentAssignment.status === 'live' && <><span style={{ color: 'var(--gold)' }}>●</span> Live now</>}
+                    {currentAssignment.status === 'paused' && <>⏸ Paused</>}
+                    {currentAssignment.status === 'not_started' && <>Ready to start</>}
+                  </div>
+                  <div className="dash-card-sub">
+                    Unit {currentAssignment.lesson.unit} · Lesson {currentAssignment.lesson.lesson_number} — {currentAssignment.lesson.title}
+                  </div>
+                  <a href="/curriculum" className="dash-card-action">
+                    {currentAssignment.status === 'not_started' ? 'Start Session →' : 'Open Live Session →'}
+                  </a>
                 </>
               ) : (
                 <>
                   <div className="dash-card-value" style={{ color: 'var(--text-faint)' }}>Nothing queued</div>
-                  <div className="dash-card-sub">Pick a lesson to teach next</div>
+                  <div className="dash-card-sub">Pick a lesson to teach next.</div>
                   <a href="/curriculum" className="dash-card-action">Open Curriculum →</a>
                 </>
               )}
             </div>
 
             <div className="dash-card">
-              <div className="dash-card-label">Lesson Overview</div>
-              {currentLesson ? (
-                <>
-                  <div className="dash-card-value" style={{ fontSize: '1.05rem', lineHeight: 1.3 }}>
-                    Unit {currentLesson.unit} · Lesson {currentLesson.lesson_number}
-                  </div>
-                  <div className="dash-card-sub" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {currentLesson.overview ?? 'No overview available.'}
-                  </div>
-                  <a href={`/lessons/${currentLesson.id}`} className="dash-card-action">Preview →</a>
-                </>
-              ) : (
-                <>
-                  <div className="dash-card-value" style={{ color: 'var(--text-faint)' }}>—</div>
-                  <div className="dash-card-sub">Assign a lesson to see its overview here.</div>
-                </>
-              )}
-            </div>
-
-            <div className="dash-card">
-              <div className="dash-card-label">Awaiting Response</div>
-              {currentLesson && totalEnrolled > 0 ? (
-                pendingStudents.length === 0 ? (
+              <div className="dash-card-label">Ledger Submissions</div>
+              {currentAssignment && (currentAssignment.status === 'live' || currentAssignment.status === 'paused') && totalEnrolled > 0 ? (
+                ledgerSubmittedCount >= totalEnrolled ? (
                   <>
-                    <div className="dash-card-value" style={{ color: '#4a8a5a' }}>All responded</div>
-                    <div className="dash-card-sub">{totalEnrolled} of {totalEnrolled} students submitted</div>
+                    <div className="dash-card-value" style={{ color: '#4a8a5a' }}>All in</div>
+                    <div className="dash-card-sub">{ledgerSubmittedCount} of {totalEnrolled} entries submitted</div>
                   </>
                 ) : (
                   <>
-                    <div className="dash-card-value" style={{ color: 'var(--gold)' }}>{pendingStudents.length}</div>
-                    <div className="dash-card-sub">of {totalEnrolled} haven&apos;t answered the poll yet</div>
-                    <a href={`/classes/${selectedClass.class_code}`} className="dash-card-action">View class →</a>
+                    <div className="dash-card-value" style={{ color: 'var(--gold)' }}>{ledgerSubmittedCount} <span style={{ color: 'var(--text-faint)', fontWeight: 400, fontSize: '0.9rem' }}>of {totalEnrolled}</span></div>
+                    <div className="dash-card-sub">students have submitted their entry</div>
                   </>
                 )
               ) : (
                 <>
                   <div className="dash-card-value" style={{ color: 'var(--text-faint)' }}>—</div>
                   <div className="dash-card-sub">
-                    {totalEnrolled === 0 ? 'No students enrolled yet.' : 'No active lesson.'}
+                    {totalEnrolled === 0
+                      ? 'No students enrolled yet.'
+                      : currentAssignment?.status === 'not_started'
+                      ? 'Start the session to see submissions.'
+                      : 'No active session.'}
                   </div>
                 </>
               )}
@@ -192,7 +190,7 @@ export default async function DashboardPage() {
             </div>
             {upNext.length === 0 ? (
               <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-faint)', fontSize: '0.875rem' }}>
-                You&apos;ve assigned all available lessons. Nice.
+                No more published lessons to assign yet.
               </div>
             ) : (
               upNext.map((l) => (

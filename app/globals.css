@@ -1054,3 +1054,135 @@ a:hover { opacity: 0.75; }
 .dash-up-next-row:last-child {
   border-bottom: none !important;
 }
+
+/* ============================================
+   STUDENT LIVE LESSON — Reading Canvas
+   Used by /student/live briefing rendering.
+   ============================================ */
+
+   :root {
+    --gold-deep:  #7a5a28;
+    --ink-soft:   #33332b;
+    --read-size:  1.18rem;
+    --read-line:  1.85;
+  }
+  
+  /* The reading canvas — white card holding briefing prose */
+  .lesson-reading {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2.5rem 3rem;
+  }
+  
+  .lesson-reading p {
+    font-family: var(--font-body);
+    font-size: var(--read-size);
+    line-height: var(--read-line);
+    color: var(--ink-soft);
+    margin-bottom: 1.4rem;
+    max-width: 38rem;
+  }
+  
+  .lesson-reading p:last-of-type {
+    margin-bottom: 0;
+  }
+  
+  /* Drop-cap lead paragraph */
+  .lesson-reading p.lead::first-letter {
+    font-family: var(--font-display);
+    font-size: 3.4rem;
+    float: left;
+    line-height: 0.82;
+    margin: 0.1rem 0.6rem 0 0;
+    color: var(--gold-deep);
+  }
+  
+  /* Pull quote — key claim, visually weighted */
+  .lesson-reading .pull {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    line-height: 1.35;
+    color: var(--text);
+    margin: 2.2rem 0;
+    padding-left: 1.2rem;
+    border-left: 3px solid var(--gold);
+    max-width: 34rem;
+  }
+  
+  /* Data callout — numbers surfaced visually */
+  .lesson-reading .data-callout {
+    background: var(--bg2);
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin: 1.8rem 0;
+    max-width: 38rem;
+  }
+  
+  .lesson-reading .data-callout .dc-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+  
+  .lesson-reading .data-callout .data-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  
+  .lesson-reading .data-callout .data-row:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+  
+  .lesson-reading .data-callout .data-fig {
+    font-family: var(--font-display);
+    font-size: 1.55rem;
+    color: var(--text);
+    min-width: 5.5rem;
+  }
+  
+  .lesson-reading .data-callout .data-desc {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+  }
+  
+  /* Source line */
+  .lesson-reading p.source {
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    margin-top: 2rem;
+    max-width: none;
+  }
+  
+  .lesson-reading p.source a {
+    color: var(--gold-deep);
+    text-decoration: underline;
+    text-decoration-color: var(--border-light);
+    text-underline-offset: 3px;
+  }
+  
+  .lesson-reading p.source a:hover {
+    text-decoration-color: var(--gold);
+  }
+  
+  /* Mobile reading */
+  @media (max-width: 768px) {
+    .lesson-reading {
+      padding: 1.75rem 1.5rem;
+      border-radius: 10px;
+    }
+    .lesson-reading p {
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+    .lesson-reading .pull {
+      font-size: 1.35rem;
+    }
+  }

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -22,11 +21,14 @@ export default function AssignButton({
     setLoading(true)
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
-
     const { error } = await supabase
       .from('lesson_assignments')
-      .insert({ lesson_id: lessonId, class_id: classId, assigned_date: today, status: 'active' })
-
+      .insert({
+        lesson_id: lessonId,
+        class_id: classId,
+        assigned_date: today,
+        status: 'not_started',
+      })
     if (!error) {
       startTransition(() => router.refresh())
     } else {
@@ -40,7 +42,7 @@ export default function AssignButton({
     <button
       onClick={handleAssign}
       disabled={loading || isPending || disabled}
-      title={disabled ? 'Complete the active lesson first.' : ''}
+      title={disabled ? 'A lesson is already live for this class.' : ''}
       style={{
         padding: '0.35rem 0.85rem',
         fontSize: '0.7rem',

@@ -29,7 +29,9 @@ export default async function StudentLayout({ children }: { children: React.Reac
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg2)', fontFamily: 'var(--font-body)' }}>
       <StudentNav className={className} />
       <div style={{ flex: 1 }}>
-        {children}
+        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+          {children}
+        </div>
       </div>
     </div>
   )

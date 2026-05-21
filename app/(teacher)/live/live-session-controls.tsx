@@ -1,0 +1,547 @@
+'use client'
+
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import type { LessonMeta } from '@/lib/lesson-meta-types'
+import QuadrantActivityComponent from '../../(student)/student/live/quadrant-activity'
+import LedgerEntryComponent from '../../(student)/student/live/ledger-entry'
+
+
+type StepKey = 'briefing' | 'activity' | 'ledger'
+const STEP_ORDER: StepKey[] = ['briefing', 'activity', 'ledger']
+const STEP_LABELS: Record<StepKey, string> = {
+  briefing: 'Briefing',
+  activity: 'Activity',
+  ledger: 'Ledger',
+}
+
+export default function LiveSessionControls({
+    assignmentId,
+    lessonId,
+    lessonSlug,
+    lessonTitle,
+    unit,
+    lessonNumber,
+    status: initialStatus,
+    initialStep,
+    briefingHtml,
+    meta,
+    profileId,
+    classCode,
+  }: {
+    assignmentId: string
+    lessonId: string
+    lessonSlug: string
+    lessonTitle: string
+    unit: number
+    lessonNumber: number
+    status: 'live' | 'paused'
+    initialStep: string | null
+    briefingHtml: string | null
+    meta: LessonMeta | null
+    profileId: string
+    classCode: string | null
+  }) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [loading, setLoading] = useState<string | null>(null)
+  const [status, setStatus] = useState<'live' | 'paused'>(initialStatus)
+  const [currentStep, setCurrentStep] = useState<StepKey>(((initialStep ?? 'briefing') as StepKey))
+  // viewStep is what the teacher is previewing. Defaults to currentStep, auto-advances on unlock.
+  const [viewStep, setViewStep] = useState<StepKey>(((initialStep ?? 'briefing') as StepKey))
+
+  // Poll every 3s to stay in sync.
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+    async function fetchState() {
+      const { data } = await supabase
+        .from('lesson_assignments')
+        .select('status, current_step')
+        .eq('id', assignmentId)
+        .maybeSingle()
+      if (cancelled || !data) return
+      if (data.status === 'completed' || data.status === 'not_started') {
+        startTransition(() => router.refresh())
+        return
+      }
+      setStatus(data.status as 'live' | 'paused')
+      setCurrentStep((data.current_step ?? 'briefing') as StepKey)
+    }
+    const id = setInterval(fetchState, 3000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [assignmentId, router])
+
+  const currentIdx = STEP_ORDER.indexOf(currentStep)
+  const nextStep: StepKey | null = currentIdx < STEP_ORDER.length - 1 ? STEP_ORDER[currentIdx + 1] : null
+  const prevStep: StepKey | null = currentIdx > 0 ? STEP_ORDER[currentIdx - 1] : null
+
+  async function setSessionStatus(newStatus: 'live' | 'paused', key: string) {
+    if (loading) return
+    setLoading(key)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('lesson_assignments')
+      .update({ status: newStatus })
+      .eq('id', assignmentId)
+    if (error) {
+      alert(`Could not update. ${error.message}`)
+      setLoading(null)
+      return
+    }
+    setStatus(newStatus)
+    setLoading(null)
+  }
+
+  async function unlock(next: StepKey) {
+    if (loading) return
+    setLoading('unlock')
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('lesson_assignments')
+      .update({ current_step: next })
+      .eq('id', assignmentId)
+    if (error) {
+      alert(`Could not unlock. ${error.message}`)
+      setLoading(null)
+      return
+    }
+    setCurrentStep(next)
+    setViewStep(next) // auto-advance teacher view
+    setLoading(null)
+  }
+
+  async function undoUnlock(prev: StepKey) {
+    if (loading) return
+    if (!confirm(`Undo? Students will return to ${STEP_LABELS[prev]}.`)) return
+    setLoading('undo')
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('lesson_assignments')
+      .update({ current_step: prev })
+      .eq('id', assignmentId)
+    if (error) {
+      alert(`Could not undo. ${error.message}`)
+      setLoading(null)
+      return
+    }
+    setCurrentStep(prev)
+    setViewStep(prev)
+    setLoading(null)
+  }
+
+  async function markComplete() {
+    if (loading) return
+    if (!confirm('Mark this lesson complete? Students will return to "Waiting for your teacher."')) return
+    setLoading('complete')
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('lesson_assignments')
+      .update({ status: 'completed', ended_at: new Date().toISOString() })
+      .eq('id', assignmentId)
+    if (error) {
+      alert(`Could not complete. ${error.message}`)
+      setLoading(null)
+      return
+    }
+    router.push('/curriculum')
+  }
+
+  const isLive = status === 'live'
+  const viewIdx = STEP_ORDER.indexOf(viewStep)
+  const viewIsLocked = viewIdx > currentIdx
+
+  return (
+    <div style={{ marginTop: '1.5rem' }}>
+      {/* ===== TOP PANEL (scrolls away) ===== */}
+      <div>
+        {/* Status header */}
+        <div style={{
+          background: isLive ? 'var(--gold-dim)' : 'var(--bg)',
+          border: `1px solid ${isLive ? 'var(--gold)' : 'var(--border)'}`,
+          borderRadius: '10px',
+          padding: '1.1rem 1.4rem',
+          marginBottom: '0.85rem',
+        }}>
+          <div style={{
+            fontSize: '0.7rem',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: isLive ? 'var(--gold)' : 'var(--text-dim)',
+            fontWeight: 600,
+            marginBottom: '0.3rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+          }}>
+            {isLive && (
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: 'var(--gold)',
+                display: 'inline-block',
+              }} />
+            )}
+            {isLive ? 'Live Now' : 'Paused'} · Class is on {STEP_LABELS[currentStep]}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '0.1rem' }}>
+          Unit {unit} · Lesson {lessonNumber}
+        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          gap: '1rem',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--text)' }}>
+            {lessonTitle}
+          </div>
+          {classCode && (
+            <a
+              href={`/broadcast/${classCode}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: 'var(--gold)',
+                textDecoration: 'none',
+                padding: '0.45rem 0.85rem',
+                background: 'var(--bg)',
+                border: '1px solid var(--gold)',
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              📺 Open broadcast for projector
+            </a>
+          )}
+        </div>
+      </div>
+
+        {/* Step progress (clickable for teacher nav) */}
+        <div style={{
+          background: 'var(--bg)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: '1rem 1.4rem',
+          marginBottom: '0.85rem',
+        }}>
+          <div style={{
+            fontSize: '0.66rem',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--gold)',
+            fontWeight: 600,
+            marginBottom: '0.75rem',
+          }}>
+            Lesson Flow · Click to preview
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {STEP_ORDER.map((s, i) => {
+              const done = i < currentIdx
+              const current = i === currentIdx
+              const locked = i > currentIdx
+              const viewing = s === viewStep
+              return (
+                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <button
+                    onClick={() => setViewStep(s)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.55rem',
+                      padding: '0.4rem 0.75rem 0.4rem 0.4rem',
+                      borderRadius: '999px',
+                      background: viewing ? 'var(--gold-dim)' : 'transparent',
+                      border: `1px solid ${viewing ? 'var(--gold)' : 'transparent'}`,
+                      cursor: 'pointer',
+                      font: 'inherit',
+                    }}
+                  >
+                    <span style={{
+                      width: '1.7rem',
+                      height: '1.7rem',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '0.85rem',
+                      background: done ? '#2f5d62' : current ? 'var(--gold)' : 'var(--bg2)',
+                      color: done || current ? '#fff' : 'var(--text-faint)',
+                      border: `1px solid ${done ? '#2f5d62' : current ? 'var(--gold)' : 'var(--border)'}`,
+                    }}>
+                      {done ? '✓' : locked ? '🔒' : i + 1}
+                    </span>
+                    <span style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: done ? 'var(--text-dim)' : current ? 'var(--text)' : 'var(--text-faint)',
+                    }}>
+                      {STEP_LABELS[s]}
+                    </span>
+                  </button>
+                  {i < STEP_ORDER.length - 1 && (
+                    <span style={{ width: '1.1rem', height: '2px', background: 'var(--border)' }} />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ===== STICKY ACTION BAR (sticks to top on scroll) ===== */}
+      <div style={{
+        position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          background: 'var(--bg2)',
+          paddingTop: '0.5rem',
+          paddingBottom: '0.5rem',
+          marginBottom: '1.5rem',
+        }}>
+          <div style={{
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '0.85rem 1.4rem',
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}>
+            <div style={{
+              fontSize: '0.7rem',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--text-faint)',
+              fontWeight: 600,
+              marginRight: '0.4rem',
+            }}>
+              On {STEP_LABELS[currentStep]}
+            </div>
+
+            {isLive ? (
+              <button onClick={() => setSessionStatus('paused', 'pause')} disabled={!!loading || isPending} style={secondaryBtn(loading)}>
+                {loading === 'pause' ? 'Pausing…' : 'Pause'}
+              </button>
+            ) : (
+              <button onClick={() => setSessionStatus('live', 'resume')} disabled={!!loading || isPending} style={secondaryBtn(loading)}>
+                {loading === 'resume' ? 'Resuming…' : 'Resume'}
+              </button>
+            )}
+
+            {prevStep && isLive && (
+              <button onClick={() => undoUnlock(prevStep)} disabled={!!loading || isPending} style={undoBtn(loading)}>
+                {loading === 'undo' ? 'Undoing…' : `↺ Undo`}
+              </button>
+            )}
+
+            {nextStep && isLive && (
+              <button onClick={() => unlock(nextStep)} disabled={!!loading || isPending} style={primaryBtn(loading)}>
+                {loading === 'unlock' ? 'Unlocking…' : `Unlock ${STEP_LABELS[nextStep]} →`}
+              </button>
+            )}
+
+            <div style={{ flex: 1 }} />
+
+            <button onClick={markComplete} disabled={!!loading || isPending} style={completeBtn(loading)}>
+              {loading === 'complete' ? 'Marking…' : 'Mark Complete'}
+              </button>
+          </div>
+        </div>
+
+      {/* ===== MIRRORED STUDENT CONTENT ===== */}
+      <div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          marginBottom: '0.85rem',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{
+            fontSize: '0.7rem',
+            letterSpacing: '0.13em',
+            textTransform: 'uppercase',
+            color: 'var(--gold)',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <span style={{ width: '1.7rem', height: '1px', background: 'var(--gold)' }} />
+            {viewIsLocked
+              ? `Previewing ${STEP_LABELS[viewStep]} — not yet released to class`
+              : viewStep === currentStep
+                ? `What the class is seeing — ${STEP_LABELS[viewStep]}`
+                : `${STEP_LABELS[viewStep]} — already released`}
+          </div>
+          {viewIsLocked && (
+            <span style={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--text-dim)',
+              background: 'var(--bg2)',
+              border: '1px solid var(--border)',
+              padding: '0.3rem 0.6rem',
+              borderRadius: '4px',
+            }}>
+              🔒 Locked to class
+            </span>
+          )}
+        </div>
+
+        <StepContent
+          step={viewStep}
+          briefingHtml={briefingHtml}
+          meta={meta}
+          assignmentId={assignmentId}
+          lessonId={lessonId}
+          profileId={profileId}
+        />
+      </div>
+    </div>
+  )
+}
+
+function StepContent({
+    step,
+    briefingHtml,
+    meta,
+    assignmentId,
+    lessonId,
+    profileId,
+  }: {
+    step: StepKey
+    briefingHtml: string | null
+    meta: LessonMeta | null
+    assignmentId: string
+    lessonId: string
+    profileId: string
+  }) {
+    if (step === 'briefing') {
+      return briefingHtml
+        ? <div className="lesson-reading" dangerouslySetInnerHTML={{ __html: briefingHtml }} />
+        : <div className="lesson-reading"><p style={{ color: 'var(--text-faint)' }}>(No briefing content for this lesson yet.)</p></div>
+    }
+    if (step === 'activity') {
+      if (meta?.activity?.type === 'quadrant') {
+        return (
+          <QuadrantActivityComponent
+            assignmentId={assignmentId}
+            lessonId={lessonId}
+            profileId={profileId}
+            spec={meta.activity}
+            readOnly={true}
+          />
+        )
+      }
+      return (
+        <div style={placeholderBoxStyle}>
+          <strong>Activity</strong> &mdash; no activity defined for this lesson yet.
+        </div>
+      )
+    }
+    if (step === 'ledger') {
+        if (meta?.ledger) {
+          return (
+            <LedgerEntryComponent
+              assignmentId={assignmentId}
+              lessonId={lessonId}
+              profileId={profileId}
+              spec={meta.ledger}
+              readOnly={true}
+            />
+          )
+        }
+        return (
+          <div style={placeholderBoxStyle}>
+            <strong>Ledger</strong> &mdash; no ledger defined for this lesson yet.
+          </div>
+        )
+      }
+      return (
+        <div style={placeholderBoxStyle}>
+          <strong>Unknown step</strong>
+        </div>
+      )
+    }
+
+const placeholderBoxStyle: React.CSSProperties = {
+  background: 'var(--bg)',
+  border: '1px dashed var(--border)',
+  borderRadius: '8px',
+  padding: '2rem',
+  textAlign: 'center',
+  color: 'var(--text-dim)',
+  fontSize: '0.92rem',
+}
+
+function primaryBtn(loading: string | null) {
+  return {
+    padding: '0.6rem 1.1rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
+    color: '#fff',
+    background: 'var(--gold)',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: loading ? 'default' : 'pointer',
+    opacity: loading ? 0.5 : 1,
+  } as const
+}
+
+function secondaryBtn(loading: string | null) {
+  return {
+    padding: '0.6rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--text-dim)',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    cursor: loading ? 'default' : 'pointer',
+    opacity: loading ? 0.5 : 1,
+  } as const
+}
+
+function undoBtn(loading: string | null) {
+  return {
+    padding: '0.6rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--text-dim)',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    cursor: loading ? 'default' : 'pointer',
+    opacity: loading ? 0.5 : 1,
+  } as const
+}
+
+function completeBtn(loading: string | null) {
+  return {
+    padding: '0.6rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--text-dim)',
+    background: 'transparent',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    cursor: loading ? 'default' : 'pointer',
+    opacity: loading ? 0.5 : 1,
+  } as const
+}
