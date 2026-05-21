@@ -84,7 +84,7 @@ export default async function CurriculumPage() {
         <ActiveLessonBanner
         assignmentId={currentAssignment.id}
         lessonTitle={currentAssignment.lesson.title}
-        lessonId={currentAssignment.lesson_id}
+        lessonSlug={currentAssignment.lesson.slug ?? ''}
         unit={currentAssignment.lesson.unit}
         lessonNumber={currentAssignment.lesson.lesson_number}
         status={currentAssignment.status as 'not_started' | 'live' | 'paused' | 'completed'}
@@ -109,16 +109,12 @@ export default async function CurriculumPage() {
               return (
                 <div key={l.slug} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', color: 'var(--gold)', minWidth: '32px' }}>{l.unit}.{l.lessonNumber}</span>
-                  {row ? (
-                    <a
-                      href={`/lessons/${row.id}`}
-                      style={{ fontSize: '0.85rem', color: 'var(--text)', textDecoration: 'none', flex: 1 }}
-                    >
-                      {l.title}
-                    </a>
-                  ) : (
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text)', flex: 1 }}>{l.title}</span>
-                  )}
+                  <a
+                  href={`/lessons/${l.slug}`}
+                    style={{ fontSize: '0.85rem', color: 'var(--text)', textDecoration: 'none', flex: 1 }}
+                  >
+                    {l.title}
+                  </a>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{
                       fontSize: '0.7rem',

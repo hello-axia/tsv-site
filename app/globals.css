@@ -1186,3 +1186,423 @@ a:hover { opacity: 0.75; }
       font-size: 1.35rem;
     }
   }
+
+  /* ============================================
+   TEACHER LESSON PREP VIEW
+   Used at /lessons/[slug] — teacher-only.
+   ============================================ */
+
+   :root {
+    --teacher: #2980b9;
+    --teacher-bg: rgba(41, 128, 185, 0.06);
+    --teacher-border: rgba(41, 128, 185, 0.25);
+  }
+
+/* Page-level layout */
+.prep-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 5rem;
+}
+
+/* Lesson header */
+.prep-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+.prep-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.7rem;
+  border-radius: 5px;
+}
+.prep-tag-type { background: var(--gold); color: #fff; }
+.prep-tag-unit { background: var(--bg2); color: var(--text); border: 1px solid var(--border); }
+.prep-tag-time { background: var(--bg2); color: var(--text); border: 1px solid var(--border); }
+
+.prep-head h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem !important;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  margin: 0 0 0.7rem;
+}
+.prep-summary {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  max-width: 42rem;
+  line-height: 1.6;
+}
+
+/* Section divider */
+.prep-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 3rem 0 1.4rem;
+}
+.prep-section-label .prep-sl-num {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold);
+}
+.prep-section-label .prep-sl-text {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.prep-section-label .prep-sl-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Student-facing block (gold accent) */
+.prep-student-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 10px 10px 0;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1rem;
+}
+.prep-block-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.prep-block-flag::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+/* Teacher-only block (teal accent) */
+.prep-teacher-block {
+  background: var(--teacher-bg);
+  border: 1px solid var(--teacher-border);
+  border-left: 3px solid var(--teacher);
+  border-radius: 0 10px 10px 0;
+  padding: 1.6rem 1.85rem;
+  margin-bottom: 1rem;
+}
+.prep-teacher-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teacher);
+  margin-bottom: 0.95rem;
+}
+.prep-teacher-flag::before {
+  content: "👁";
+  font-size: 0.85rem;
+}
+.prep-teacher-block h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem !important;
+  color: var(--text);
+  margin-bottom: 0.55rem !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.prep-teacher-block p {
+  font-size: 0.96rem;
+  color: var(--text);
+  margin-bottom: 0.8rem;
+  line-height: 1.65;
+}
+.prep-teacher-block p:last-child { margin-bottom: 0; }
+.prep-teacher-block strong { color: var(--text); font-weight: 600; }
+.prep-teacher-block em { color: var(--text); }
+
+/* Call-on scripts */
+.prep-script-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+.prep-script-row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.95rem 1.15rem;
+}
+.prep-script-row .prep-sr-target {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--teacher);
+  margin-bottom: 0.35rem;
+}
+.prep-script-row .prep-sr-line {
+  font-size: 0.96rem;
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+/* Closing script — same blue tint as the rest */
+.prep-script-spoken {
+  background: var(--bg);
+  border: 1px solid var(--teacher-border);
+  border-radius: 8px;
+  padding: 1.15rem 1.35rem;
+  margin: 1rem 0;
+}
+.prep-script-spoken .prep-ss-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teacher);
+  margin-bottom: 0.5rem;
+}
+.prep-script-spoken p {
+  font-size: 0.98rem;
+  line-height: 1.62;
+  color: var(--text);
+  margin-bottom: 0.7rem;
+}
+.prep-script-spoken p:last-child { margin-bottom: 0; }
+
+/* Facilitation notes */
+.prep-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.prep-note-item {
+  display: flex;
+  gap: 0.7rem;
+  font-size: 0.93rem;
+  color: var(--text);
+  line-height: 1.6;
+}
+.prep-note-item::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--teacher);
+  margin-top: 0.55rem;
+}
+
+/* Activity meta grid */
+.prep-activity-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1.4rem 0;
+}
+.prep-meta-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+}
+.prep-meta-item .prep-mi-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.25rem;
+}
+.prep-meta-item .prep-mi-value {
+  font-size: 0.92rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Quadrant preview (static, small) */
+.prep-quad-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  margin: 1.5rem 0;
+  align-items: center;
+}
+.prep-quad-yaxis {
+  writing-mode: vertical-rl;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teacher);
+  text-align: center;
+}
+.prep-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  background: var(--teacher-border);
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 2 / 1.15;
+}
+.prep-quad-cell {
+  background: var(--bg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.prep-quad-cell .prep-qc-name {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  color: var(--text);
+}
+.prep-quad-cell .prep-qc-desc {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.prep-quad-xaxis {
+  grid-column: 2;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teacher);
+  margin-top: 0.4rem;
+}
+
+/* Ledger preview card */
+.prep-ledger-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.prep-ledger-head {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0.95rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.prep-ledger-head .prep-lh-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.prep-ledger-head .prep-lh-meta {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+.prep-ledger-body { padding: 1.5rem; }
+.prep-ledger-q-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.5rem;
+}
+.prep-ledger-question {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 1.1rem;
+  line-height: 1.3;
+}
+.prep-ledger-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.prep-ledger-opt {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+.prep-ledger-opt .prep-opt-key {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: var(--gold);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+.prep-ledger-opt strong { color: var(--text); font-weight: 600; }
+.prep-ledger-written {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.prep-ledger-written .prep-lw-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.4rem;
+}
+.prep-ledger-written .prep-lw-prompt {
+  font-size: 0.96rem;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+  line-height: 1.55;
+}
+.prep-ledger-written .prep-lw-field {
+  font-size: 0.88rem;
+  color: var(--text-faint);
+  font-style: italic;
+  padding: 0.85rem 1rem;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.prep-tier-note {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.7rem 0.95rem;
+}
+.prep-tier-note strong { color: var(--text); font-weight: 600; }

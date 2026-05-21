@@ -8,14 +8,14 @@ type AssignmentStatus = 'not_started' | 'live' | 'paused' | 'completed'
 
 export default function ActiveLessonBanner({
   assignmentId,
-  lessonId,
+  lessonSlug,
   lessonTitle,
   unit,
   lessonNumber,
   status,
 }: {
   assignmentId: string
-  lessonId: string
+  lessonSlug: string
   lessonTitle: string
   unit: number
   lessonNumber: number
@@ -137,7 +137,7 @@ export default function ActiveLessonBanner({
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
         <a
-          href={`/lessons/${lessonId}`}
+          href={`/lessons/${lessonSlug}`}
           style={{
             padding: '0.55rem 1rem',
             fontSize: '0.78rem',

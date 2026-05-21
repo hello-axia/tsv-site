@@ -52,3 +52,45 @@ export type QuadrantActivity = {
     activity?: ActivityMeta
     ledger?: LedgerMeta
   }
+
+  // --- Teacher Notes ---------------------------------------------------------
+// Lives in a separate {slug}.teacher.ts sidecar — teacher-only material
+// used by the prep view at /lessons/[slug]. Not queried at runtime by the
+// live session. Each section is optional so partial authoring works.
+
+export type CallOnScript = {
+  target: string  // e.g. "To an Affected but Tuned Out student"
+  line: string    // the question to ask
+}
+
+export type ClosingScript = {
+  label: string   // e.g. "Read aloud"
+  lines: string[] // multiple paragraphs
+}
+
+export type FacilitationNote = {
+  title: string   // bolded lead, e.g. "Don't moralize."
+  body: string    // the rest of the note
+}
+
+export type LessonTeacherNotes = {
+  slug: string
+
+  // Lesson-wide
+  summary?: string             // 1-2 sentence "what this lesson does"
+  estimatedMinutes?: number    // shown only at top of page
+
+  // Per-stage
+  briefing?: {
+    notes?: string             // free-form HTML, optional
+  }
+  activity?: {
+    guide?: string             // "Why this activity" prose (HTML)
+    callOnScripts?: CallOnScript[]
+    closingScript?: ClosingScript
+    facilitationNotes?: FacilitationNote[]
+  }
+  ledger?: {
+    intro?: string             // "About this entry" prose (HTML)
+  }
+}

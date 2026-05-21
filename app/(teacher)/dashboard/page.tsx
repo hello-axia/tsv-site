@@ -77,7 +77,7 @@ export default async function DashboardPage() {
   // "Up Next" — published lessons not yet assigned to this class.
   const { data: allLessons } = await supabase
     .from('lessons')
-    .select('id, unit, lesson_number, title, status')
+    .select('id, slug, unit, lesson_number, title, status')
     .eq('status', 'published')
     .order('unit')
     .order('lesson_number')
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               upNext.map((l) => (
-                <a key={l.id} href={`/lessons/${l.id}`} className="dash-up-next-row"
+                <a key={l.id} href={`/lessons/${l.slug ?? ''}`} className="dash-up-next-row"
                   style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.95rem 1.5rem', borderBottom: '1px solid var(--border)', textDecoration: 'none', transition: 'background 0.15s' }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--gold)', minWidth: '44px' }}>
                     {l.unit}.{l.lesson_number}
