@@ -5,12 +5,21 @@ import ClassSelector from '../_components/class-selector'
 import { getCurrentSessionForClass } from '@/lib/live-session'
 import { getLessonContentHtml } from '@/lib/lesson-content'
 import LiveSessionControls from './live-session-controls'
-import type { LessonMeta } from '@/lib/lesson-meta-types'
+import type { LessonMeta, LessonTeacherNotes } from '@/lib/lesson-meta-types'
 
 async function loadLessonMeta(slug: string): Promise<LessonMeta | null> {
   try {
     const mod = await import(`@/content/lessons/${slug}.meta`)
     return (mod.meta ?? null) as LessonMeta | null
+  } catch {
+    return null
+  }
+}
+
+async function loadTeacherNotes(slug: string): Promise<LessonTeacherNotes | null> {
+  try {
+    const mod = await import(`@/content/lessons/${slug}.teacher`)
+    return (mod.teacherNotes ?? null) as LessonTeacherNotes | null
   } catch {
     return null
   }
@@ -45,6 +54,8 @@ export default async function LivePage() {
     : null
     const briefingHtml = session ? getLessonContentHtml(session.lesson.slug) : null
     const meta = session ? await loadLessonMeta(session.lesson.slug) : null
+    const teacher = session ? await loadTeacherNotes(session.lesson.slug) : null
+
 
 
 
@@ -87,6 +98,7 @@ export default async function LivePage() {
             meta={meta}
             profileId={profile.id}
             classCode={selectedClassCode}
+            teacher={teacher}
           />
         )}
       </div>

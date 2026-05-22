@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { LessonMeta } from '@/lib/lesson-meta-types'
+import type { LessonMeta, LessonTeacherNotes } from '@/lib/lesson-meta-types'
 import QuadrantActivityComponent from '../../(student)/student/live/quadrant-activity'
 import LedgerEntryComponent from '../../(student)/student/live/ledger-entry'
 
@@ -29,7 +29,8 @@ export default function LiveSessionControls({
     meta,
     profileId,
     classCode,
-  }: {
+    teacher,
+}: {
     assignmentId: string
     lessonId: string
     lessonSlug: string
@@ -42,6 +43,7 @@ export default function LiveSessionControls({
     meta: LessonMeta | null
     profileId: string
     classCode: string | null
+    teacher: LessonTeacherNotes | null
   }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -50,6 +52,7 @@ export default function LiveSessionControls({
   const [currentStep, setCurrentStep] = useState<StepKey>(((initialStep ?? 'briefing') as StepKey))
   // viewStep is what the teacher is previewing. Defaults to currentStep, auto-advances on unlock.
   const [viewStep, setViewStep] = useState<StepKey>(((initialStep ?? 'briefing') as StepKey))
+  const [notesOpen, setNotesOpen] = useState(false)
 
   // Poll every 3s to stay in sync.
   useEffect(() => {
@@ -328,7 +331,13 @@ export default function LiveSessionControls({
             }}>
               On {STEP_LABELS[currentStep]}
             </div>
-
+            <button
+              onClick={() => setNotesOpen(true)}
+              style={notesBtnStyle}
+              title="Show teacher notes for this step"
+            >
+              📋 Teacher Notes
+            </button>
             {isLive ? (
               <button onClick={() => setSessionStatus('paused', 'pause')} disabled={!!loading || isPending} style={secondaryBtn(loading)}>
                 {loading === 'pause' ? 'Pausing…' : 'Pause'}
@@ -412,6 +421,15 @@ export default function LiveSessionControls({
           profileId={profileId}
         />
       </div>
+
+      {/* ===== TEACHER NOTES SIDE PANEL ===== */}
+      {notesOpen && (
+        <TeacherNotesPanel
+          step={viewStep}
+          teacher={teacher}
+          onClose={() => setNotesOpen(false)}
+        />
+      )}
     </div>
   )
 }
@@ -478,7 +496,140 @@ function StepContent({
         </div>
       )
     }
-
+    function TeacherNotesPanel({
+        step,
+        teacher,
+        onClose,
+      }: {
+        step: StepKey
+        teacher: LessonTeacherNotes | null
+        onClose: () => void
+      }) {
+        if (!teacher) {
+          return (
+            <Backdrop onClose={onClose}>
+              <PanelHeader title="Teacher notes" onClose={onClose} />
+              <p style={{ color: 'var(--text-faint)', fontSize: '0.95rem' }}>
+                No teacher notes authored for this lesson yet.
+              </p>
+            </Backdrop>
+          )
+        }
+      
+        const stepLabel = STEP_LABELS[step]
+      
+        return (
+          <Backdrop onClose={onClose}>
+            <PanelHeader title={`Teacher notes · ${stepLabel}`} onClose={onClose} />
+      
+            {step === 'briefing' && (
+              teacher.briefing?.notes ? (
+                <div style={panelBlockStyle}>
+                  <div dangerouslySetInnerHTML={{ __html: teacher.briefing.notes }} />
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-faint)', fontSize: '0.95rem' }}>
+                  No briefing-specific notes for this lesson.
+                </p>
+              )
+            )}
+      
+            {step === 'activity' && teacher.activity && (
+              <>
+                {teacher.activity.guide && (
+                  <div style={panelBlockStyle}>
+                    <div style={panelSectionLabelStyle}>Activity guide</div>
+                    <div dangerouslySetInnerHTML={{ __html: teacher.activity.guide }} />
+                  </div>
+                )}
+      
+                {teacher.activity.callOnScripts && teacher.activity.callOnScripts.length > 0 && (
+                  <div style={panelBlockStyle}>
+                    <div style={panelSectionLabelStyle}>Call on students</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                      {teacher.activity.callOnScripts.map((s, i) => (
+                        <div key={i} style={panelScriptRowStyle}>
+                          <div style={panelScriptTargetStyle}>{s.target}</div>
+                          <div style={panelScriptLineStyle}>{s.line}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+      
+                {teacher.activity.closingScript && (
+                  <div style={panelBlockStyle}>
+                    <div style={panelSectionLabelStyle}>{teacher.activity.closingScript.label}</div>
+                    {teacher.activity.closingScript.lines.map((line, i) => (
+                      <p key={i} style={{ marginBottom: '0.6rem', fontSize: '0.95rem', lineHeight: 1.6 }}>{line}</p>
+                    ))}
+                  </div>
+                )}
+      
+                {teacher.activity.facilitationNotes && teacher.activity.facilitationNotes.length > 0 && (
+                  <div style={panelBlockStyle}>
+                    <div style={panelSectionLabelStyle}>Facilitation notes</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      {teacher.activity.facilitationNotes.map((n, i) => (
+                        <div key={i} style={panelNoteStyle}>
+                          <strong>{n.title}</strong> {n.body}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+      
+            {step === 'ledger' && teacher.ledger && (
+              teacher.ledger.intro ? (
+                <div style={panelBlockStyle}>
+                  <div style={panelSectionLabelStyle}>About this entry</div>
+                  <div dangerouslySetInnerHTML={{ __html: teacher.ledger.intro }} />
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-faint)', fontSize: '0.95rem' }}>
+                  No ledger-specific notes for this lesson.
+                </p>
+              )
+            )}
+          </Backdrop>
+        )
+      }
+      
+      function Backdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+        return (
+          <>
+            {/* Click-outside dismiss */}
+            <div
+              onClick={onClose}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.18)',
+                zIndex: 100,
+              }}
+            />
+            {/* The actual panel */}
+            <div style={panelStyle}>
+              {children}
+            </div>
+          </>
+        )
+      }
+      
+      function PanelHeader({ title, onClose }: { title: string; onClose: () => void }) {
+        return (
+          <div style={panelHeaderStyle}>
+            <div style={panelTitleStyle}>{title}</div>
+            <button onClick={onClose} style={panelCloseStyle} aria-label="Close panel">
+              ✕
+            </button>
+          </div>
+        )
+      }
+      
+      const STEP_LABELS_FOR_PANEL = STEP_LABELS // alias so the function above can use it
 const placeholderBoxStyle: React.CSSProperties = {
   background: 'var(--bg)',
   border: '1px dashed var(--border)',
@@ -531,7 +682,105 @@ function undoBtn(loading: string | null) {
     opacity: loading ? 0.5 : 1,
   } as const
 }
+const notesBtnStyle: React.CSSProperties = {
+    padding: '0.6rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--teacher)',
+    background: 'var(--bg)',
+    border: '1px solid var(--teacher-border)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  }
 
+  const panelStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: '420px',
+    maxWidth: '92vw',
+    background: 'var(--bg)',
+    borderLeft: '1px solid var(--border)',
+    boxShadow: '-4px 0 16px rgba(0,0,0,0.08)',
+    zIndex: 101,
+    overflowY: 'auto',
+    padding: '1.5rem 1.5rem 3rem',
+  }
+  
+  const panelHeaderStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: '1rem',
+    marginBottom: '1.25rem',
+    borderBottom: '1px solid var(--border)',
+  }
+  
+  const panelTitleStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.2rem',
+    color: 'var(--text)',
+  }
+  
+  const panelCloseStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    fontSize: '1.2rem',
+    color: 'var(--text-faint)',
+    cursor: 'pointer',
+    padding: '0.25rem 0.5rem',
+  }
+  
+  const panelBlockStyle: React.CSSProperties = {
+    background: 'var(--teacher-bg)',
+    border: '1px solid var(--teacher-border)',
+    borderLeft: '3px solid var(--teacher)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1rem 1.15rem',
+    marginBottom: '1rem',
+    fontSize: '0.93rem',
+    lineHeight: 1.6,
+    color: 'var(--text)',
+  }
+  
+  const panelSectionLabelStyle: React.CSSProperties = {
+    fontSize: '0.66rem',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: 'var(--teacher)',
+    marginBottom: '0.6rem',
+  }
+  
+  const panelScriptRowStyle: React.CSSProperties = {
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    padding: '0.75rem 0.95rem',
+  }
+  
+  const panelScriptTargetStyle: React.CSSProperties = {
+    fontSize: '0.66rem',
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: 'var(--teacher)',
+    marginBottom: '0.3rem',
+  }
+  
+  const panelScriptLineStyle: React.CSSProperties = {
+    fontSize: '0.92rem',
+    color: 'var(--text)',
+    fontStyle: 'italic',
+    lineHeight: 1.55,
+  }
+  
+  const panelNoteStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    color: 'var(--text)',
+    lineHeight: 1.55,
+  }
 function completeBtn(loading: string | null) {
   return {
     padding: '0.6rem 1rem',
