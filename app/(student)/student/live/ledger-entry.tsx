@@ -53,16 +53,14 @@ export default function LedgerEntryComponent({ assignmentId, lessonId, profileId
     let cancelled = false
 
     async function fetchCount() {
-      // Students who have submitted ledger_entries for THIS assignment.
-      // Note: ledger_entries unique is (student_id, lesson_id), but we filter
-      // by assignment_id for accurate "this session" counts.
-      const { count } = await supabase
-        .from('ledger_entries')
-        .select('*', { count: 'exact', head: true })
-        .eq('assignment_id', assignmentId)
-      if (cancelled) return
-      setSubmissionCount(count ?? 0)
-    }
+        // Uses count_ledger_for_assignment() — security definer function so both teachers
+        // and students get the count. Teachers can't read ledger_entries directly (Tier 1
+        // privacy is wire-enforced) but the count itself is not private.
+        const { data: c } = await supabase
+          .rpc('count_ledger_for_assignment', { p_assignment_id: assignmentId })
+        if (cancelled) return
+        setSubmissionCount(typeof c === 'number' ? c : 0)
+      }
 
     async function fetchClassSize() {
       const { data: assignment } = await supabase

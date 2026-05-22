@@ -65,12 +65,12 @@ export default async function DashboardPage() {
     totalEnrolled = enrollments?.length ?? 0
 
     // For a live/paused assignment, count Ledger submissions so far.
+    // Uses get_ledger_meta_for_assignment() — security definer function that returns
+    // metadata only (no written_response). Teachers can't read ledger content directly.
     if (currentAssignment && (currentAssignment.status === 'live' || currentAssignment.status === 'paused')) {
-      const { count } = await supabase
-        .from('ledger_entries')
-        .select('id', { count: 'exact', head: true })
-        .eq('assignment_id', currentAssignment.id)
-      ledgerSubmittedCount = count ?? 0
+      const { data: ledgerMeta } = await supabase
+        .rpc('get_ledger_meta_for_assignment', { p_assignment_id: currentAssignment.id })
+      ledgerSubmittedCount = ledgerMeta?.length ?? 0
     }
   }
 

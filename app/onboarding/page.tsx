@@ -34,11 +34,9 @@ function OnboardingForm() {
     if (!user) { router.push('/'); return }
 
     if (role === 'student') {
-      const { data: classData, error: classError } = await supabase
-        .from('classes')
-        .select('id, school_id')
-        .eq('class_code', classCode.toUpperCase().trim())
-        .single()
+      const { data: classRows, error: classError } = await supabase
+        .rpc('find_class_by_code', { p_class_code: classCode })
+      const classData = classRows?.[0] ?? null
 
       console.log('class lookup:', classData, classError)
 
