@@ -6,7 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 import type { LessonMeta, LessonTeacherNotes } from '@/lib/lesson-meta-types'
 import QuadrantActivityComponent from '../../(student)/student/live/quadrant-activity'
 import LedgerEntryComponent from '../../(student)/student/live/ledger-entry'
-
+import U1L2TensionsActivity from '../../(student)/student/live/u1-l2-tensions-activity'
+import U1L3ThreadsActivity from '../../(student)/student/live/u1-l3-threads-activity'
+import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
+import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
 
 type StepKey = 'briefing' | 'activity' | 'ledger'
 const STEP_ORDER: StepKey[] = ['briefing', 'activity', 'ledger']
@@ -419,6 +422,7 @@ export default function LiveSessionControls({
           assignmentId={assignmentId}
           lessonId={lessonId}
           profileId={profileId}
+          lessonSlug={lessonSlug}
         />
       </div>
 
@@ -441,6 +445,7 @@ function StepContent({
     assignmentId,
     lessonId,
     profileId,
+    lessonSlug,
   }: {
     step: StepKey
     briefingHtml: string | null
@@ -448,6 +453,7 @@ function StepContent({
     assignmentId: string
     lessonId: string
     profileId: string
+    lessonSlug: string
   }) {
     if (step === 'briefing') {
       return briefingHtml
@@ -455,23 +461,45 @@ function StepContent({
         : <div className="lesson-reading"><p style={{ color: 'var(--text-faint)' }}>(No briefing content for this lesson yet.)</p></div>
     }
     if (step === 'activity') {
-      if (meta?.activity?.type === 'quadrant') {
+        if (meta?.activity?.type === 'quadrant') {
+          return (
+            <QuadrantActivityComponent
+              assignmentId={assignmentId}
+              lessonId={lessonId}
+              profileId={profileId}
+              spec={meta.activity}
+              readOnly={true}
+            />
+          )
+        }
+        if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l2') {
+            return (
+              <U1L2TensionsActivity
+                assignmentId={assignmentId}
+                lessonId={lessonId}
+                profileId={profileId}
+                data={meta.activity.data as U1L2ActivityData}
+                mode="teacher"
+              />
+            )
+          }
+          if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l3') {
+            return (
+              <U1L3ThreadsActivity
+                assignmentId={assignmentId}
+                lessonId={lessonId}
+                profileId={profileId}
+                data={meta.activity.data as U1L3ActivityData}
+                mode="teacher"
+              />
+            )
+          }
         return (
-          <QuadrantActivityComponent
-            assignmentId={assignmentId}
-            lessonId={lessonId}
-            profileId={profileId}
-            spec={meta.activity}
-            readOnly={true}
-          />
+          <div style={placeholderBoxStyle}>
+            <strong>Activity</strong> &mdash; no activity defined for this lesson yet.
+          </div>
         )
       }
-      return (
-        <div style={placeholderBoxStyle}>
-          <strong>Activity</strong> &mdash; no activity defined for this lesson yet.
-        </div>
-      )
-    }
     if (step === 'ledger') {
         if (meta?.ledger) {
           return (

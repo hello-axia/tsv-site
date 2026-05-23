@@ -1,6 +1,6 @@
 // app/broadcast/[code]/page.tsx
 import { headers } from 'next/headers'
-import BroadcastShell from './broadcast-shell'
+import BroadcastShell, { type State } from './broadcast-shell'
 import type { LessonMeta } from '@/lib/lesson-meta-types'
 
 export const dynamic = 'force-dynamic'
@@ -13,21 +13,6 @@ async function loadLessonMeta(slug: string): Promise<LessonMeta | null> {
     return null
   }
 }
-
-type State =
-  | { status: 'no_class' }
-  | { status: 'waiting'; className: string; classCode: string }
-  | {
-      status: 'live' | 'paused'
-      currentStep: string | null
-      className: string
-      classCode: string
-      enrollmentCount: number
-      lesson: { slug: string; title: string; unit: number; lessonNumber: number; lessonType: string }
-      placements: { x: number; y: number }[]
-      placementCount: number
-      ledgerCount: number
-    }
 
 export default async function BroadcastPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params

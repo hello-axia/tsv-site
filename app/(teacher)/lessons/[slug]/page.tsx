@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { getLessonContentHtml } from '@/lib/lesson-content'
 import type { LessonMeta, LessonTeacherNotes, QuadrantActivity } from '@/lib/lesson-meta-types'
+import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
+import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   briefing: 'Briefing',
@@ -131,6 +133,14 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
 
                 {meta.activity.type === 'quadrant' && (
                   <QuadrantPreview spec={meta.activity} />
+                )}
+
+{meta.activity.type === 'custom' && slug === 'u1-l2' && (
+                  <U1L2ScenariosPreview data={meta.activity.data as U1L2ActivityData} />
+                )}
+
+                {meta.activity.type === 'custom' && slug === 'u1-l3' && (
+                  <U1L3ClaimsPreview data={meta.activity.data as U1L3ActivityData} />
                 )}
               </div>
             )}
@@ -294,3 +304,236 @@ function QuadrantPreview({ spec }: { spec: QuadrantActivity }) {
     </div>
   )
 }
+
+function U1L2ScenariosPreview({ data }: { data: U1L2ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={scenariosLabelStyle}>
+          Tension: <strong>{data.tension}</strong> · {data.scenarios.length} scenarios
+        </div>
+        {data.scenarios.map((s, i) => (
+          <div
+            key={s.key}
+            style={{
+              ...scenarioCardStyle,
+              marginBottom: i === data.scenarios.length - 1 ? 0 : '1.2rem',
+            }}
+          >
+            <div style={scenarioHeadStyle}>
+              <span style={scenarioNumStyle}>Scenario {s.index}</span>
+              <h4 style={scenarioTitleStyle}>{s.title.replace(/^Scenario \d+\s*—\s*/, '')}</h4>
+            </div>
+            {s.prompt && (
+              <div style={scenarioPromptStyle}>{s.prompt}</div>
+            )}
+            <div style={polesStyle}>
+              <div style={poleStyle}>
+                <div style={{ ...poleSideStyle, color: 'var(--gold)' }}>Liberty end</div>
+                <div style={poleLabelStyle}>{s.libertyEnd.label}</div>
+                <div style={poleArgStyle}>{s.libertyEnd.valueArgument}</div>
+              </div>
+              <div style={poleStyle}>
+                <div style={{ ...poleSideStyle, color: '#2980b9' }}>Equality end</div>
+                <div style={poleLabelStyle}>{s.equalityEnd.label}</div>
+                <div style={poleArgStyle}>{s.equalityEnd.valueArgument}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  function U1L3ClaimsPreview({ data }: { data: U1L3ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={u1l3PrepLabelStyle}>
+          Pair worksheet · {data.claims.length} claims · Answer key reveal at end
+        </div>
+        {data.claims.map((c, i) => (
+          <div
+            key={c.key}
+            style={{
+              ...u1l3PrepCardStyle,
+              marginBottom: i === data.claims.length - 1 ? 0 : '1rem',
+            }}
+          >
+            <div style={u1l3PrepClaimHeadStyle}>
+              <span style={u1l3PrepClaimNumStyle}>Claim {c.index}</span>
+              <div style={u1l3PrepClaimTextStyle}>{c.claim}</div>
+            </div>
+            <div style={u1l3PrepThreadsStyle}>
+              <div style={u1l3PrepThreadBoxStyle}>
+                <div style={{ ...u1l3PrepThreadSideStyle, color: 'var(--gold)' }}>Empirical (answer key)</div>
+                <div style={u1l3PrepThreadTextStyle}>{c.answerKey.empirical}</div>
+              </div>
+              <div style={u1l3PrepThreadBoxStyle}>
+                <div style={{ ...u1l3PrepThreadSideStyle, color: '#2980b9' }}>Normative (answer key)</div>
+                <div style={u1l3PrepThreadTextStyle}>{c.answerKey.normative}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  const u1l3PrepLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+  
+  const u1l3PrepCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.4rem 1.6rem',
+  }
+  
+  const u1l3PrepClaimHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.85rem',
+    marginBottom: '0.85rem',
+    paddingBottom: '0.75rem',
+    borderBottom: '1px solid var(--border)',
+  }
+  
+  const u1l3PrepClaimNumStyle: React.CSSProperties = {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#2980b9',
+    background: 'rgba(41, 128, 185, 0.08)',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '4px',
+    whiteSpace: 'nowrap',
+  }
+  
+  const u1l3PrepClaimTextStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.05rem',
+    color: 'var(--text)',
+    lineHeight: 1.3,
+  }
+  
+  const u1l3PrepThreadsStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1rem',
+  }
+  
+  const u1l3PrepThreadBoxStyle: React.CSSProperties = {
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    padding: '0.85rem 1rem',
+  }
+  
+  const u1l3PrepThreadSideStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    marginBottom: '0.45rem',
+  }
+  
+  const u1l3PrepThreadTextStyle: React.CSSProperties = {
+    fontSize: '0.85rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.55,
+  }
+  
+  const scenariosLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+  
+  const scenarioCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.4rem 1.6rem',
+  }
+  
+  const scenarioHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.85rem',
+    marginBottom: '0.85rem',
+    paddingBottom: '0.75rem',
+    borderBottom: '1px solid var(--border)',
+  }
+  
+  const scenarioNumStyle: React.CSSProperties = {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#2980b9',
+    background: 'rgba(41, 128, 185, 0.08)',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '4px',
+    whiteSpace: 'nowrap',
+  }
+  
+  const scenarioTitleStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.05rem',
+    color: 'var(--text)',
+    margin: 0,
+    lineHeight: 1.3,
+  }
+  
+  const scenarioPromptStyle: React.CSSProperties = {
+    fontSize: '0.92rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.55,
+    marginBottom: '1rem',
+    padding: '0.6rem 0.85rem',
+    borderLeft: '3px solid var(--border)',
+    background: 'var(--bg)',
+    borderRadius: '0 4px 4px 0',
+  }
+  
+  const polesStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1rem',
+  }
+  
+  const poleStyle: React.CSSProperties = {
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    padding: '0.9rem 1rem',
+  }
+  
+  const poleSideStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    marginBottom: '0.45rem',
+  }
+  
+  const poleLabelStyle: React.CSSProperties = {
+    fontWeight: 600,
+    fontSize: '0.95rem',
+    color: 'var(--text)',
+    lineHeight: 1.35,
+    marginBottom: '0.55rem',
+  }
+  
+  const poleArgStyle: React.CSSProperties = {
+    fontSize: '0.86rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.6,
+  }

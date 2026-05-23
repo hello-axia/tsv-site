@@ -33,7 +33,7 @@ export async function GET(
   const { data: assignment } = await supabase
     .from('lesson_assignments')
     .select(`
-      id, status, current_step, activity_revealed,
+      id, status, current_step, activity_revealed, activity_state,
       lessons(id, slug, title, unit, lesson_number, lesson_type)
     `)
     .eq('class_id', classRow.id)
@@ -53,10 +53,13 @@ export async function GET(
     unit: number; lesson_number: number; lesson_type: string
   }
 
-  // 4. Activity submissions — anonymized, coords only.
+  // 4. Activity submissions.
+  // For quadrant lessons (u1-l1), placements: { x, y }[] is pre-extracted.
+  // For custom lessons (u1-l2+), submissions: unknown[] carries the raw payload
+  // and the broadcast shell parses per-lesson. Both are returned for clarity.
   const { data: subs } = await supabase
     .from('activity_submissions')
-    .select('data')
+    .select('data, student_id')
     .eq('assignment_id', assignment.id)
 
   const placements: { x: number; y: number }[] = []
@@ -67,27 +70,33 @@ export async function GET(
     }
   }
 
+  const submissions = (subs ?? []).map(row => ({
+    student_id: row.student_id as string,
+    data: row.data as unknown,
+  }))
   // 5. Ledger submission count.
   const { count: ledgerCount } = await supabase
     .from('ledger_entries')
     .select('*', { count: 'exact', head: true })
     .eq('assignment_id', assignment.id)
 
-  return NextResponse.json({
-    status: assignment.status as 'live' | 'paused',
-    currentStep: assignment.current_step,
-    className: classRow.name,
-    classCode: classRow.class_code,
-    enrollmentCount: enrollmentCount ?? 0,
-    lesson: {
-      slug: lesson.slug,
-      title: lesson.title,
-      unit: lesson.unit,
-      lessonNumber: lesson.lesson_number,
-      lessonType: lesson.lesson_type,
-    },
-    placements,
-    placementCount: placements.length,
-    ledgerCount: ledgerCount ?? 0,
-  })
+    return NextResponse.json({
+        status: assignment.status as 'live' | 'paused',
+        currentStep: assignment.current_step,
+        activityState: (assignment.activity_state ?? {}) as Record<string, unknown>,
+        className: classRow.name,
+        classCode: classRow.class_code,
+        enrollmentCount: enrollmentCount ?? 0,
+        lesson: {
+          slug: lesson.slug,
+          title: lesson.title,
+          unit: lesson.unit,
+          lessonNumber: lesson.lesson_number,
+          lessonType: lesson.lesson_type,
+        },
+        placements,
+        placementCount: placements.length,
+        submissions,
+        ledgerCount: ledgerCount ?? 0,
+      })
 }

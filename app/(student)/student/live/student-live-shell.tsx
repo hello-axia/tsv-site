@@ -6,6 +6,10 @@ import type { CurrentLiveSession } from '@/lib/live-session'
 import type { LessonMeta } from '@/lib/lesson-meta-types'
 import QuadrantActivityComponent from './quadrant-activity'
 import LedgerEntryComponent from './ledger-entry'
+import U1L2TensionsActivity from './u1-l2-tensions-activity'
+import U1L3ThreadsActivity from './u1-l3-threads-activity'
+import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
+import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
 
 type Props = {
     profileId: string
@@ -109,8 +113,8 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
       {unlockedSteps.includes('briefing') && (
         <Stage
           number={1}
-          flag="Set the scene"
-          title={session.lesson.title}
+          flag={meta?.framing?.briefing?.flag ?? 'Set the scene'}
+          title={meta?.framing?.briefing?.title ?? session.lesson.title}
           isCurrent={currentStep === 'briefing'}
         >
           {briefingHtml ? (
@@ -127,8 +131,8 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
       {unlockedSteps.includes('activity') && (
         <Stage
           number={2}
-          flag="Place yourself"
-          title="Where do you stand?"
+          flag={meta?.framing?.activity?.flag ?? 'Place yourself'}
+          title={meta?.framing?.activity?.title ?? 'Where do you stand?'}
           isCurrent={currentStep === 'activity'}
         >
           {meta?.activity?.type === 'quadrant' && session ? (
@@ -137,6 +141,22 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
               lessonId={session.lesson.id}
               profileId={profileId}
               spec={meta.activity}
+            />
+        ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l2' ? (
+            <U1L2TensionsActivity
+              assignmentId={session.assignment_id}
+              lessonId={session.lesson.id}
+              profileId={profileId}
+              data={meta.activity.data as U1L2ActivityData}
+              mode="student"
+            />
+          ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l3' ? (
+            <U1L3ThreadsActivity
+              assignmentId={session.assignment_id}
+              lessonId={session.lesson.id}
+              profileId={profileId}
+              data={meta.activity.data as U1L3ActivityData}
+              mode="student"
             />
           ) : (
             <div style={placeholderBoxStyle}>
@@ -150,8 +170,8 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
       {unlockedSteps.includes('ledger') && (
         <Stage
           number={3}
-          flag="Your civic journal"
-          title="Add to your Ledger."
+          flag={meta?.framing?.ledger?.flag ?? 'Your civic journal'}
+          title={meta?.framing?.ledger?.title ?? 'Add to your Ledger.'}
           isCurrent={currentStep === 'ledger'}
         >
           {meta?.ledger && session ? (

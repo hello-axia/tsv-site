@@ -21,11 +21,14 @@ export type QuadrantActivity = {
     options: { key: string; label: string }[]
   }
   
-  // Open-ended / written-only / custom activity — only the type label matters,
-  // rendering and prompts live in the HTML.
+  // Open-ended / lesson-specific activity. Each lesson defines its own
+  // local shape for `data` and casts on the consumer side. The generic
+  // runtime treats this as opaque; only the lesson's own activity
+  // component / cockpit mirror / broadcast renderer know the shape.
   export type CustomActivity = {
     type: 'custom'
-    label?: string  // optional short label for the teacher's live view
+    label?: string   // optional short label for the teacher's live view
+    data?: unknown   // lesson-specific structured payload
   }
   
   export type ActivityMeta = QuadrantActivity | McActivity | CustomActivity
@@ -47,11 +50,23 @@ export type QuadrantActivity = {
   
   // --- The top-level shape ----------------------------------------------------
   
-  export type LessonMeta = {
-    slug: string
-    activity?: ActivityMeta
-    ledger?: LedgerMeta
+  export type StageFraming = {
+    flag?: string   // small uppercase eyebrow above the stage title
+    title?: string  // big display-font heading
   }
+  
+  export type LessonMeta = {
+      slug: string
+      activity?: ActivityMeta
+      ledger?: LedgerMeta
+      // Per-stage header overrides. If a stage is omitted (or a field within it
+      // is omitted), the generic default copy is used.
+      framing?: {
+        briefing?: StageFraming
+        activity?: StageFraming
+        ledger?: StageFraming
+      }
+    }
 
   // --- Teacher Notes ---------------------------------------------------------
 // Lives in a separate {slug}.teacher.ts sidecar — teacher-only material
