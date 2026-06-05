@@ -4,6 +4,10 @@ import { getLessonContentHtml } from '@/lib/lesson-content'
 import type { LessonMeta, LessonTeacherNotes, QuadrantActivity } from '@/lib/lesson-meta-types'
 import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
 import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
+import type { U1L4ActivityData } from '@/content/lessons/u1-l4.meta'
+import type { U1L5ActivityData } from '@/content/lessons/u1-l5.meta'
+import type { U1L6ActivityData } from '@/content/lessons/u1-l6.meta'
+import type { U1L7ActivityData } from '@/content/lessons/u1-l7.meta'
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
   briefing: 'Briefing',
@@ -139,8 +143,24 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
                   <U1L2ScenariosPreview data={meta.activity.data as U1L2ActivityData} />
                 )}
 
-                {meta.activity.type === 'custom' && slug === 'u1-l3' && (
+{meta.activity.type === 'custom' && slug === 'u1-l3' && (
                   <U1L3ClaimsPreview data={meta.activity.data as U1L3ActivityData} />
+                )}
+
+{meta.activity.type === 'custom' && slug === 'u1-l4' && (
+                  <U1L4AuditPreview data={meta.activity.data as U1L4ActivityData} />
+                )}
+
+{meta.activity.type === 'custom' && slug === 'u1-l5' && (
+                  <U1L5SteelmanPreview data={meta.activity.data as U1L5ActivityData} />
+                )}
+
+{meta.activity.type === 'custom' && slug === 'u1-l6' && (
+                  <U1L6DeliberationPreview data={meta.activity.data as U1L6ActivityData} />
+                )}
+
+                {meta.activity.type === 'custom' && slug === 'u1-l7' && (
+                  <U1L7ReflectionPreview data={meta.activity.data as U1L7ActivityData} />
                 )}
               </div>
             )}
@@ -536,4 +556,612 @@ function U1L2ScenariosPreview({ data }: { data: U1L2ActivityData }) {
     fontSize: '0.86rem',
     color: 'var(--text-dim)',
     lineHeight: 1.6,
+  }
+
+  function U1L4AuditPreview({ data }: { data: U1L4ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={u1l4PrepLabelStyle}>
+          Side-pick + self-audit · 4 phases (Pick · Audit · Share-out · Reveal key)
+        </div>
+
+        {/* The two arguments */}
+        {data.arguments.map((arg, i) => (
+          <div
+            key={arg.side}
+            style={{
+              ...u1l4PrepArgCardStyle,
+              marginBottom: '1rem',
+            }}
+          >
+            <div style={u1l4PrepArgHeadStyle}>
+              <span style={u1l4PrepArgBadgeStyle}>Argument {arg.side}</span>
+              <div style={u1l4PrepArgLabelStyle}>{arg.label}</div>
+            </div>
+            <p style={u1l4PrepArgBodyStyle}>{arg.body}</p>
+          </div>
+        ))}
+
+        {/* The answer keys */}
+        <div style={{ ...u1l4PrepLabelStyle, marginTop: '1.5rem' }}>
+          Answer key — for the reveal phase
+        </div>
+
+        {data.answerKey.map(entry => (
+          <div key={entry.side} style={u1l4PrepKeyCardStyle}>
+            <div style={u1l4PrepKeyHeadStyle}>
+              <span style={u1l4PrepArgBadgeStyle}>Argument {entry.side}</span>
+              <span style={u1l4PrepKeyMetaStyle}>
+                {entry.strengths.length} strengths · {entry.weaknesses.length} weaknesses
+              </span>
+            </div>
+
+            <div style={u1l4PrepKeyGroupLabelStyle}>What it does well</div>
+            {entry.strengths.map((s, i) => (
+              <div key={`s-${i}`} style={u1l4PrepKeyEntryStyle}>
+                <strong>{s.title}</strong> {s.body}
+              </div>
+            ))}
+
+            <div style={{ ...u1l4PrepKeyGroupLabelStyle, marginTop: '0.85rem' }}>
+              What it lacks or smooths over
+            </div>
+            {entry.weaknesses.map((w, i) => (
+              <div key={`w-${i}`} style={u1l4PrepKeyEntryStyle}>
+                <strong>{w.title}</strong> {w.body}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  const u1l4PrepLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+
+  const u1l4PrepArgCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.4rem 1.6rem',
+  }
+
+  const u1l4PrepArgHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.85rem',
+    marginBottom: '0.9rem',
+    paddingBottom: '0.7rem',
+    borderBottom: '1px solid var(--border)',
+    flexWrap: 'wrap',
+  }
+
+  const u1l4PrepArgBadgeStyle: React.CSSProperties = {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#2980b9',
+    background: 'rgba(41, 128, 185, 0.08)',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '4px',
+    whiteSpace: 'nowrap',
+  }
+
+  const u1l4PrepArgLabelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.05rem',
+    color: 'var(--text)',
+    lineHeight: 1.3,
+  }
+
+  const u1l4PrepArgBodyStyle: React.CSSProperties = {
+    fontSize: '0.92rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.65,
+    margin: 0,
+  }
+
+  const u1l4PrepKeyCardStyle: React.CSSProperties = {
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.2rem 1.4rem',
+    marginBottom: '1rem',
+  }
+
+  const u1l4PrepKeyHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.85rem',
+    marginBottom: '0.8rem',
+    paddingBottom: '0.6rem',
+    borderBottom: '1px solid var(--border)',
+    flexWrap: 'wrap',
+  }
+
+  const u1l4PrepKeyMetaStyle: React.CSSProperties = {
+    fontSize: '0.78rem',
+    color: 'var(--text-faint)',
+  }
+
+  const u1l4PrepKeyGroupLabelStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.5rem',
+  }
+
+  const u1l4PrepKeyEntryStyle: React.CSSProperties = {
+    fontSize: '0.88rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.55,
+    marginBottom: '0.5rem',
+  }
+
+  function U1L5SteelmanPreview({ data }: { data: U1L5ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={u1l5PrepLabelStyle}>
+          Side pick + steelman the opposite · 4 phases (Pick · Read &amp; write · Pair share · Closing) · Verbal pairing
+        </div>
+
+        {/* The tension and poll question */}
+        <div style={u1l5PrepTensionCardStyle}>
+          <div style={u1l5PrepTensionFlagStyle}>Six Tensions · {data.tension}</div>
+          <div style={u1l5PrepTensionQStyle}>{data.pollQuestion}</div>
+        </div>
+
+        {/* The two cases */}
+        <div style={u1l5PrepCasesLabelStyle}>The two cases students choose between</div>
+        {data.cases.map(c => (
+          <div key={c.side} style={u1l5PrepCaseCardStyle}>
+            <div style={u1l5PrepCaseHeadStyle}>
+              <span style={u1l5PrepCaseBadgeStyle}>
+                {c.side === 'federal' ? 'Federal' : 'State'}
+              </span>
+              <h4 style={u1l5PrepCaseTitleStyle}>{c.label}</h4>
+            </div>
+            {c.body.split(/\n\n+/).map((p, i) => (
+              <p key={i} style={u1l5PrepCaseParaStyle}>{p.trim()}</p>
+            ))}
+          </div>
+        ))}
+
+        {/* Pair share prompts */}
+        <div style={u1l5PrepPairBoxStyle}>
+          <div style={u1l5PrepPairLabelStyle}>Pair share prompts</div>
+          <ol style={u1l5PrepPairListStyle}>
+            {data.pairSharePrompts.map((p, i) => (
+              <li key={i} style={u1l5PrepPairItemStyle}>{p}</li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    )
+  }
+
+  const u1l5PrepLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+
+  const u1l5PrepTensionCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.1rem 1.4rem',
+    marginBottom: '1.5rem',
+  }
+
+  const u1l5PrepTensionFlagStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.55rem',
+  }
+
+  const u1l5PrepTensionQStyle: React.CSSProperties = {
+    fontSize: '0.95rem',
+    color: 'var(--text)',
+    lineHeight: 1.6,
+  }
+
+  const u1l5PrepCasesLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '0.85rem',
+  }
+
+  const u1l5PrepCaseCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.4rem 1.6rem',
+    marginBottom: '1rem',
+  }
+
+  const u1l5PrepCaseHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.85rem',
+    marginBottom: '0.9rem',
+    paddingBottom: '0.7rem',
+    borderBottom: '1px solid var(--border)',
+    flexWrap: 'wrap',
+  }
+
+  const u1l5PrepCaseBadgeStyle: React.CSSProperties = {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#2980b9',
+    background: 'rgba(41, 128, 185, 0.08)',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '4px',
+    whiteSpace: 'nowrap',
+  }
+
+  const u1l5PrepCaseTitleStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.05rem',
+    color: 'var(--text)',
+    margin: 0,
+    lineHeight: 1.3,
+  }
+
+  const u1l5PrepCaseParaStyle: React.CSSProperties = {
+    fontSize: '0.88rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.65,
+    margin: '0 0 0.65rem',
+  }
+
+  const u1l5PrepPairBoxStyle: React.CSSProperties = {
+    marginTop: '1.5rem',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.2rem 1.4rem',
+  }
+
+  const u1l5PrepPairLabelStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.7rem',
+  }
+
+  const u1l5PrepPairListStyle: React.CSSProperties = {
+    margin: 0,
+    paddingLeft: '1.3rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  }
+
+  const u1l5PrepPairItemStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    color: 'var(--text)',
+    lineHeight: 1.55,
+  }
+
+  function U1L6DeliberationPreview({ data }: { data: U1L6ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={u1l6PrepLabelStyle}>
+          Assigned-side deliberation · Prep + 5 rounds + closing · Sides assigned by count-off (not chosen)
+        </div>
+
+        {/* Tension + question */}
+        <div style={u1l6PrepTensionCardStyle}>
+          <div style={u1l6PrepTensionFlagStyle}>Six Tensions · {data.tension}</div>
+          <div style={u1l6PrepTensionQStyle}>{data.question}</div>
+          <div style={u1l6PrepSidesRowStyle}>
+            <span style={u1l6PrepSideTagStyle}>YES — {data.sideLabels.yes}</span>
+            <span style={u1l6PrepSideTagStyle}>NO — {data.sideLabels.no}</span>
+          </div>
+        </div>
+
+        {/* Round sequence */}
+        <div style={u1l6PrepRoundsLabelStyle}>The five debate rounds (you advance them)</div>
+        {data.rounds.map((r, i) => (
+          <div key={r.step} style={u1l6PrepRoundCardStyle}>
+            <div style={u1l6PrepRoundHeadStyle}>
+              <span style={u1l6PrepRoundNumStyle}>Round {i + 1}</span>
+              <h4 style={u1l6PrepRoundTitleStyle}>{r.headline}</h4>
+            </div>
+            <p style={u1l6PrepRoundInstrStyle}>{r.instruction}</p>
+          </div>
+        ))}
+
+        {/* Closing questions */}
+        <div style={u1l6PrepClosingBoxStyle}>
+          <div style={u1l6PrepClosingLabelStyle}>Closing questions</div>
+          <ol style={u1l6PrepClosingListStyle}>
+            {data.closingQuestions.map((q, i) => (
+              <li key={i} style={u1l6PrepClosingItemStyle}>{q}</li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    )
+  }
+
+  const u1l6PrepLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+
+  const u1l6PrepTensionCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.1rem 1.4rem',
+    marginBottom: '1.5rem',
+  }
+
+  const u1l6PrepTensionFlagStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.55rem',
+  }
+
+  const u1l6PrepTensionQStyle: React.CSSProperties = {
+    fontSize: '0.95rem',
+    color: 'var(--text)',
+    lineHeight: 1.6,
+    marginBottom: '0.9rem',
+  }
+
+  const u1l6PrepSidesRowStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '0.6rem',
+    flexWrap: 'wrap',
+  }
+
+  const u1l6PrepSideTagStyle: React.CSSProperties = {
+    fontSize: '0.78rem',
+    fontWeight: 600,
+    color: 'var(--text-dim)',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    padding: '0.35rem 0.7rem',
+  }
+
+  const u1l6PrepRoundsLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '0.85rem',
+  }
+
+  const u1l6PrepRoundCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.1rem 1.4rem',
+    marginBottom: '0.85rem',
+  }
+
+  const u1l6PrepRoundHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.85rem',
+    marginBottom: '0.55rem',
+    flexWrap: 'wrap',
+  }
+
+  const u1l6PrepRoundNumStyle: React.CSSProperties = {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#2980b9',
+    background: 'rgba(41, 128, 185, 0.08)',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '4px',
+    whiteSpace: 'nowrap',
+  }
+
+  const u1l6PrepRoundTitleStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.05rem',
+    color: 'var(--text)',
+    margin: 0,
+    lineHeight: 1.3,
+  }
+
+  const u1l6PrepRoundInstrStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.6,
+    margin: 0,
+  }
+
+  const u1l6PrepClosingBoxStyle: React.CSSProperties = {
+    marginTop: '1.5rem',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.2rem 1.4rem',
+  }
+
+  const u1l6PrepClosingLabelStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.7rem',
+  }
+
+  const u1l6PrepClosingListStyle: React.CSSProperties = {
+    margin: 0,
+    paddingLeft: '1.3rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  }
+
+  const u1l6PrepClosingItemStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    color: 'var(--text)',
+    lineHeight: 1.55,
+  }
+
+  function U1L7ReflectionPreview({ data }: { data: U1L7ActivityData }) {
+    return (
+      <div style={{ marginTop: '1.5rem' }}>
+        <div style={u1l7PrepLabelStyle}>
+          Unit capstone reflection · No interactive activity · Static recap + written Ledger
+        </div>
+
+        <div style={u1l7PrepCapabilityCardStyle}>
+          <div style={u1l7PrepCapabilityFlagStyle}>What this unit was for</div>
+          <div style={u1l7PrepCapabilityTextStyle}>{data.capability}</div>
+        </div>
+
+        <div style={u1l7PrepToolsLabelStyle}>The four tools (recap shown to students)</div>
+        {data.tools.map((tool, i) => (
+          <div key={i} style={u1l7PrepToolCardStyle}>
+            <div style={u1l7PrepToolHeadStyle}>
+              <span style={u1l7PrepToolNumStyle}>{i + 1}</span>
+              <div>
+                <div style={u1l7PrepToolNameStyle}>{tool.name}</div>
+                <div style={u1l7PrepToolFullNameStyle}>{tool.fullName}</div>
+              </div>
+            </div>
+            <p style={u1l7PrepToolTakeawayStyle}>{tool.takeaway}</p>
+            <div style={u1l7PrepToolPracticedStyle}>
+              <strong>Practiced in:</strong> {tool.practicedIn}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  const u1l7PrepLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '1rem',
+  }
+
+  const u1l7PrepCapabilityCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--gold)',
+    borderRadius: '0 8px 8px 0',
+    padding: '1.1rem 1.4rem',
+    marginBottom: '1.5rem',
+  }
+
+  const u1l7PrepCapabilityFlagStyle: React.CSSProperties = {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.55rem',
+  }
+
+  const u1l7PrepCapabilityTextStyle: React.CSSProperties = {
+    fontSize: '0.95rem',
+    color: 'var(--text)',
+    lineHeight: 1.6,
+  }
+
+  const u1l7PrepToolsLabelStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: '0.85rem',
+  }
+
+  const u1l7PrepToolCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '1.3rem 1.5rem',
+    marginBottom: '0.85rem',
+  }
+
+  const u1l7PrepToolHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.85rem',
+    marginBottom: '0.8rem',
+  }
+
+  const u1l7PrepToolNumStyle: React.CSSProperties = {
+    flexShrink: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.5rem',
+    color: 'var(--gold)',
+    lineHeight: 1,
+    minWidth: '1.8rem',
+  }
+
+  const u1l7PrepToolNameStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.15rem',
+    color: 'var(--text)',
+    lineHeight: 1.2,
+    marginBottom: '0.2rem',
+  }
+
+  const u1l7PrepToolFullNameStyle: React.CSSProperties = {
+    fontSize: '0.82rem',
+    color: 'var(--text-faint)',
+    lineHeight: 1.4,
+  }
+
+  const u1l7PrepToolTakeawayStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    color: 'var(--text)',
+    lineHeight: 1.6,
+    margin: '0 0 0.9rem',
+  }
+
+  const u1l7PrepToolPracticedStyle: React.CSSProperties = {
+    fontSize: '0.85rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.5,
+    paddingTop: '0.8rem',
+    borderTop: '1px dashed var(--border)',
   }

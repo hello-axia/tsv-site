@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import type { LessonMeta, QuadrantActivity } from '@/lib/lesson-meta-types'
+import U1L7ReflectionActivity from '@/app/(student)/student/live/u1-l7-reflection'
 import type { U1L2ActivityData, U1L2Scenario } from '@/content/lessons/u1-l2.meta'
 import type { U1L3ActivityData, U1L3Claim } from '@/content/lessons/u1-l3.meta'
+import type { U1L4ActivityData, U1L4Argument, U1L4AnswerKeyEntry } from '@/content/lessons/u1-l4.meta'
+import type { U1L5ActivityData, U1L5Side, U1L5Case } from '@/content/lessons/u1-l5.meta'
+import type { U1L6ActivityData, U1L6Side, U1L6Round } from '@/content/lessons/u1-l6.meta'
+import type { U1L7ActivityData } from '@/content/lessons/u1-l7.meta'
 
 export type RawSubmission = {
     student_id: string
@@ -128,6 +133,18 @@ function ActivityScreen({ state, meta }: { state: LiveState; meta: LessonMeta | 
     }
     if (state.lesson.slug === 'u1-l3' && meta?.activity?.type === 'custom') {
       return <U1L3BroadcastScreen state={state} data={meta.activity.data as U1L3ActivityData} />
+    }
+    if (state.lesson.slug === 'u1-l4' && meta?.activity?.type === 'custom') {
+      return <U1L4BroadcastScreen state={state} data={meta.activity.data as U1L4ActivityData} />
+    }
+    if (state.lesson.slug === 'u1-l5' && meta?.activity?.type === 'custom') {
+      return <U1L5BroadcastScreen state={state} data={meta.activity.data as U1L5ActivityData} />
+    }
+    if (state.lesson.slug === 'u1-l6' && meta?.activity?.type === 'custom') {
+      return <U1L6BroadcastScreen state={state} data={meta.activity.data as U1L6ActivityData} />
+    }
+    if (state.lesson.slug === 'u1-l7' && meta?.activity?.type === 'custom') {
+      return <U1L7BroadcastScreen state={state} data={meta.activity.data as U1L7ActivityData} />
     }
   
     const spec = meta?.activity?.type === 'quadrant' ? (meta.activity as QuadrantActivity) : null
@@ -371,13 +388,448 @@ function ActivityScreen({ state, meta }: { state: LiveState; meta: LessonMeta | 
               <div style={u1l3BroadcastAnswerTextStyle}>{claim.answerKey.normative}</div>
             </div>
           </div>
-        )}
-      </div>
-    )
-  }
+       )}
+       </div>
+     )
+   }
+ 
+   type U1L4ActivityStep = 'pick_side' | 'audit' | 'share_out' | 'reveal_key'
+   const U1L4_PHASE_LABELS: Record<U1L4ActivityStep, string> = {
+     pick_side: 'Pick side',
+     audit: 'Audit',
+     share_out: 'Share-out',
+     reveal_key: 'Reveal key',
+   }
+   const U1L4_PHASE_TITLES: Record<U1L4ActivityStep, string> = {
+     pick_side: 'Pick the side you intuitively agree with',
+     audit: 'Audit your own side',
+     share_out: 'Share what you found',
+     reveal_key: 'Answer key',
+   }
+ 
+   function U1L4BroadcastScreen({ state, data }: { state: LiveState; data: U1L4ActivityData }) {
+     const stepRaw = state.activityState?.activityStep
+     const activityStep: U1L4ActivityStep =
+       stepRaw === 'pick_side' || stepRaw === 'audit' || stepRaw === 'share_out' || stepRaw === 'reveal_key'
+         ? stepRaw
+         : 'pick_side'
+ 
+     let sideACount = 0
+     let sideBCount = 0
+     let auditCount = 0
+     for (const sub of state.submissions) {
+       const d = sub.data as { side?: 'A' | 'B'; audit?: unknown } | null
+       if (d?.side === 'A') sideACount++
+       if (d?.side === 'B') sideBCount++
+       if (d?.audit) auditCount++
+     }
+ 
+     const argA = data.arguments[0]
+     const argB = data.arguments[1]
+     const keyA = data.answerKey[0]
+     const keyB = data.answerKey[1]
+ 
+     return (
+       <div style={fullScreenContainerStyle}>
+         <div style={topBarStyle}>
+           <div>
+             <div style={topEyebrowStyle}>
+               Step 2 — Audit your own side · {state.className}
+             </div>
+             <div style={topTitleStyle}>{U1L4_PHASE_TITLES[activityStep]}</div>
+           </div>
+           <div style={liveCountStyle}>
+             {activityStep === 'pick_side' ? (
+               <>
+                 <span style={liveCountNumStyle}>{sideACount + sideBCount}</span>
+                 <span style={liveCountLabelStyle}>of {state.enrollmentCount} picked</span>
+               </>
+             ) : (
+               <>
+                 <span style={liveCountNumStyle}>{auditCount}</span>
+                 <span style={liveCountLabelStyle}>of {state.enrollmentCount} submitted</span>
+               </>
+             )}
+           </div>
+         </div>
+ 
+         {/* Phase pills */}
+         <div style={u1l4BroadcastPhaseRowStyle}>
+           {(['pick_side', 'audit', 'share_out', 'reveal_key'] as U1L4ActivityStep[]).map(p => {
+             const isActive = p === activityStep
+             return (
+               <div
+                 key={p}
+                 style={{
+                   ...u1l4BroadcastPhasePillStyle,
+                   background: isActive ? '#2980b9' : 'var(--bg2)',
+                   color: isActive ? '#fff' : 'var(--text-dim)',
+                   border: `2px solid ${isActive ? '#2980b9' : 'var(--border)'}`,
+                 }}
+               >
+                 {U1L4_PHASE_LABELS[p]}
+               </div>
+             )
+           })}
+         </div>
+ 
+         {/* Body */}
+         {activityStep === 'pick_side' && (
+           <div style={u1l4BroadcastArgsGridStyle}>
+             <U1L4BroadcastArgFull arg={argA} count={sideACount} />
+             <U1L4BroadcastArgFull arg={argB} count={sideBCount} />
+           </div>
+         )}
+ 
+         {(activityStep === 'audit' || activityStep === 'share_out') && (
+           <div style={u1l4BroadcastArgsGridStyle}>
+             <U1L4BroadcastArgCompact arg={argA} count={sideACount} />
+             <U1L4BroadcastArgCompact arg={argB} count={sideBCount} />
+           </div>
+         )}
+ 
+         {activityStep === 'reveal_key' && (
+           <div style={u1l4BroadcastKeyScrollStyle}>
+             <div style={u1l4BroadcastKeyGridStyle}>
+               <U1L4BroadcastAnswerKey entry={keyA} />
+               <U1L4BroadcastAnswerKey entry={keyB} />
+             </div>
+           </div>
+         )}
+       </div>
+     )
+   }
+ 
+   function U1L4BroadcastArgFull({ arg, count }: { arg: U1L4Argument; count: number }) {
+     return (
+       <div style={u1l4BroadcastArgFullCardStyle}>
+         <div style={u1l4BroadcastArgHeadStyle}>
+           <span style={u1l4BroadcastArgBadgeStyle}>Argument {arg.side}</span>
+           <span style={u1l4BroadcastArgCountStyle}>{count} picked</span>
+         </div>
+         <div style={u1l4BroadcastArgLabelStyle}>{arg.label}</div>
+         <p style={u1l4BroadcastArgBodyStyle}>{arg.body}</p>
+       </div>
+     )
+   }
+ 
+   function U1L4BroadcastArgCompact({ arg, count }: { arg: U1L4Argument; count: number }) {
+     return (
+       <div style={u1l4BroadcastArgCompactCardStyle}>
+         <div style={u1l4BroadcastArgHeadStyle}>
+           <span style={u1l4BroadcastArgBadgeStyle}>Argument {arg.side}</span>
+           <span style={u1l4BroadcastArgCountStyle}>{count} picked</span>
+         </div>
+         <div style={u1l4BroadcastArgLabelStyle}>{arg.label}</div>
+       </div>
+     )
+   }
+ 
+   function U1L4BroadcastAnswerKey({ entry }: { entry: U1L4AnswerKeyEntry }) {
+     return (
+       <div style={u1l4BroadcastKeyColStyle}>
+         <div style={u1l4BroadcastKeyHeaderStyle}>Argument {entry.side}</div>
+ 
+         <div style={u1l4BroadcastKeyGroupLabelStyle}>What it does well</div>
+         {entry.strengths.map((s, i) => (
+           <div key={`s-${i}`} style={u1l4BroadcastKeyEntryStyle}>
+             <div style={u1l4BroadcastKeyEntryTitleStyle}>{s.title}</div>
+             <div style={u1l4BroadcastKeyEntryBodyStyle}>{s.body}</div>
+           </div>
+         ))}
+ 
+         <div style={{ ...u1l4BroadcastKeyGroupLabelStyle, marginTop: '1.2rem' }}>What it lacks or smooths over</div>
+         {entry.weaknesses.map((w, i) => (
+           <div key={`w-${i}`} style={u1l4BroadcastKeyEntryStyle}>
+             <div style={u1l4BroadcastKeyEntryTitleStyle}>{w.title}</div>
+             <div style={u1l4BroadcastKeyEntryBodyStyle}>{w.body}</div>
+           </div>
+         ))}
+         </div>
+       )
+     }
+   
+     type U1L5ActivityStep = 'pick_side' | 'read_and_write' | 'pair_share' | 'closing'
+     const U1L5_PHASE_LABELS: Record<U1L5ActivityStep, string> = {
+       pick_side: 'Pick side',
+       read_and_write: 'Read & write',
+       pair_share: 'Pair share',
+       closing: 'Closing',
+     }
+     const U1L5_PHASE_TITLES: Record<U1L5ActivityStep, string> = {
+       pick_side: 'Federal authority or state authority?',
+       read_and_write: 'Build the strongest case for the side you didn\u2019t pick',
+       pair_share: 'Trade screens with someone who picked the other side',
+       closing: 'That\u2019s the move.',
+     }
+   
+     function U1L5BroadcastScreen({ state, data }: { state: LiveState; data: U1L5ActivityData }) {
+       const stepRaw = state.activityState?.activityStep
+       const activityStep: U1L5ActivityStep =
+         stepRaw === 'pick_side' || stepRaw === 'read_and_write' ||
+         stepRaw === 'pair_share' || stepRaw === 'closing'
+           ? stepRaw
+           : 'pick_side'
+   
+       let federalCount = 0
+       let stateCount = 0
+       let steelmanCount = 0
+       for (const sub of state.submissions) {
+         const d = sub.data as { side?: U1L5Side; steelman?: unknown } | null
+         if (d?.side === 'federal') federalCount++
+         if (d?.side === 'state') stateCount++
+         if (d?.steelman) steelmanCount++
+       }
+   
+       const federalCase = data.cases.find(c => c.side === 'federal')
+       const stateCase = data.cases.find(c => c.side === 'state')
+   
+       return (
+         <div style={fullScreenContainerStyle}>
+           <div style={topBarStyle}>
+             <div>
+               <div style={topEyebrowStyle}>
+                 Step 2 — Steelman it · {state.className}
+               </div>
+               <div style={topTitleStyle}>{U1L5_PHASE_TITLES[activityStep]}</div>
+             </div>
+             <div style={liveCountStyle}>
+               {activityStep === 'pick_side' ? (
+                 <>
+                   <span style={liveCountNumStyle}>{federalCount + stateCount}</span>
+                   <span style={liveCountLabelStyle}>of {state.enrollmentCount} picked</span>
+                 </>
+               ) : (
+                 <>
+                   <span style={liveCountNumStyle}>{steelmanCount}</span>
+                   <span style={liveCountLabelStyle}>of {state.enrollmentCount} submitted</span>
+                 </>
+               )}
+             </div>
+           </div>
+   
+           {/* Phase pills */}
+           <div style={u1l5BroadcastPhaseRowStyle}>
+             {(['pick_side', 'read_and_write', 'pair_share', 'closing'] as U1L5ActivityStep[]).map(p => {
+               const isActive = p === activityStep
+               return (
+                 <div
+                   key={p}
+                   style={{
+                     ...u1l5BroadcastPhasePillStyle,
+                     background: isActive ? '#2980b9' : 'var(--bg2)',
+                     color: isActive ? '#fff' : 'var(--text-dim)',
+                     border: `2px solid ${isActive ? '#2980b9' : 'var(--border)'}`,
+                   }}
+                 >
+                   {U1L5_PHASE_LABELS[p]}
+                 </div>
+               )
+             })}
+           </div>
+   
+           {/* Body */}
+           {activityStep === 'pick_side' && (
+             <div style={u1l5BroadcastPollWrapStyle}>
+               <div style={u1l5BroadcastQuestionStyle}>{data.pollQuestion}</div>
+               <div style={u1l5BroadcastTallyGridStyle}>
+                 <U1L5BroadcastTally label="The federal government" count={federalCount} />
+                 <U1L5BroadcastTally label="The state governments" count={stateCount} />
+               </div>
+             </div>
+           )}
+   
+           {activityStep === 'read_and_write' && federalCase && stateCase && (
+             <div style={u1l5BroadcastCasesGridStyle}>
+               <U1L5BroadcastCaseCompact caseData={stateCase} count={federalCount} hint="If you picked Federal, write this." />
+               <U1L5BroadcastCaseCompact caseData={federalCase} count={stateCount} hint="If you picked State, write this." />
+             </div>
+           )}
+   
+           {activityStep === 'pair_share' && (
+             <div style={u1l5BroadcastPairWrapStyle}>
+               <div style={u1l5BroadcastPairInstructionStyle}>
+                 Find a partner who picked <strong>the side you wrote for</strong>. Trade screens. Read their steelman of your view.
+               </div>
+               <div style={u1l5BroadcastPromptsLabelStyle}>Then discuss</div>
+               <ol style={u1l5BroadcastPromptsListStyle}>
+                 {data.pairSharePrompts.map((p, i) => (
+                   <li key={i} style={u1l5BroadcastPromptItemStyle}>{p}</li>
+                 ))}
+               </ol>
+             </div>
+           )}
+   
+           {activityStep === 'closing' && (
+             <div style={u1l5BroadcastClosingWrapStyle}>
+               <div style={u1l5BroadcastClosingTextStyle}>
+                 You now know what the other side actually believes — because you had to write it, and someone who holds that view checked your work.
+               </div>
+               <div style={u1l5BroadcastClosingSubStyle}>
+                 That&rsquo;s the difference between debate and noise.
+               </div>
+             </div>
+           )}
+         </div>
+       )
+     }
+   
+     function U1L5BroadcastTally({ label, count }: { label: string; count: number }) {
+       return (
+         <div style={u1l5BroadcastTallyCardStyle}>
+           <div style={u1l5BroadcastTallyCountStyle}>{count}</div>
+           <div style={u1l5BroadcastTallyLabelStyle}>{label}</div>
+         </div>
+       )
+     }
+   
+     function U1L5BroadcastCaseCompact({ caseData, count, hint }: { caseData: U1L5Case; count: number; hint: string }) {
+      return (
+        <div style={u1l5BroadcastCaseCardStyle}>
+          <div style={u1l5BroadcastCaseHeadStyle}>
+            <span style={u1l5BroadcastCaseBadgeStyle}>{caseData.label}</span>
+            <span style={u1l5BroadcastCaseHintStyle}>{hint}</span>
+          </div>
+          <div style={u1l5BroadcastCaseCountStyle}>
+            {count} student{count === 1 ? '' : 's'} writing this
+          </div>
+        </div>
+      )
+    }
+
+    type U1L6ActivityStep = 'prep' | 'yes_case' | 'no_echo' | 'no_case' | 'yes_echo' | 'open' | 'closing'
+    const U1L6_STEP_ORDER: U1L6ActivityStep[] = ['prep', 'yes_case', 'no_echo', 'no_case', 'yes_echo', 'open', 'closing']
+    const U1L6_PILL_LABELS: Record<U1L6ActivityStep, string> = {
+      prep: 'Prep',
+      yes_case: 'Yes case',
+      no_echo: 'No echoes',
+      no_case: 'No case',
+      yes_echo: 'Yes echoes',
+      open: 'Open',
+      closing: 'Closing',
+    }
+
+    function U1L6BroadcastScreen({ state, data }: { state: LiveState; data: U1L6ActivityData }) {
+      const stepRaw = state.activityState?.activityStep
+      const activityStep: U1L6ActivityStep =
+        U1L6_STEP_ORDER.includes(stepRaw as U1L6ActivityStep)
+          ? (stepRaw as U1L6ActivityStep)
+          : 'prep'
+
+      let yesCount = 0
+      let noCount = 0
+      for (const sub of state.submissions) {
+        const d = sub.data as { assignedSide?: U1L6Side } | null
+        if (d?.assignedSide === 'yes') yesCount++
+        if (d?.assignedSide === 'no') noCount++
+      }
+      const prepCount = yesCount + noCount
+
+      const round: U1L6Round | undefined = data.rounds.find(r => r.step === activityStep)
+
+      return (
+        <div style={fullScreenContainerStyle}>
+          <div style={topBarStyle}>
+            <div>
+              <div style={topEyebrowStyle}>
+                Step 2 — Deliberate · {data.tension} · {state.className}
+              </div>
+              <div style={topTitleStyle}>{data.question}</div>
+            </div>
+            <div style={liveCountStyle}>
+              {activityStep === 'prep' ? (
+                <>
+                  <span style={liveCountNumStyle}>{prepCount}</span>
+                  <span style={liveCountLabelStyle}>of {state.enrollmentCount} prepped</span>
+                </>
+              ) : (
+                <>
+                  <span style={liveCountNumStyle}>{yesCount}–{noCount}</span>
+                  <span style={liveCountLabelStyle}>Yes · No</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Phase pills */}
+          <div style={u1l6BroadcastPhaseRowStyle}>
+            {U1L6_STEP_ORDER.map(p => {
+              const isActive = p === activityStep
+              return (
+                <div
+                  key={p}
+                  style={{
+                    ...u1l6BroadcastPhasePillStyle,
+                    background: isActive ? '#2980b9' : 'var(--bg2)',
+                    color: isActive ? '#fff' : 'var(--text-dim)',
+                    border: `2px solid ${isActive ? '#2980b9' : 'var(--border)'}`,
+                  }}
+                >
+                  {U1L6_PILL_LABELS[p]}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Body */}
+          {activityStep === 'prep' && (
+            <div style={u1l6BroadcastCenterWrapStyle}>
+              <div style={u1l6BroadcastPrepHeadlineStyle}>Prepare your side</div>
+              <div style={u1l6BroadcastPrepSubStyle}>
+                You&rsquo;ve been counted off. Build your two arguments and predict the other side. The debate starts when your teacher advances.
+              </div>
+              <div style={u1l6BroadcastTallyGridStyle}>
+                <div style={u1l6BroadcastTallyCardStyle}>
+                  <div style={u1l6BroadcastTallyCountStyle}>{yesCount}</div>
+                  <div style={u1l6BroadcastTallyLabelStyle}>Yes · {data.sideLabels.yes}</div>
+                </div>
+                <div style={u1l6BroadcastTallyCardStyle}>
+                  <div style={u1l6BroadcastTallyCountStyle}>{noCount}</div>
+                  <div style={u1l6BroadcastTallyLabelStyle}>No · {data.sideLabels.no}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {round && (activityStep !== 'prep') && (
+            <div style={u1l6BroadcastCenterWrapStyle}>
+              <div style={u1l6BroadcastRoundHeadlineStyle}>{round.headline}</div>
+              <div style={u1l6BroadcastRoundInstructionStyle}>{round.instruction}</div>
+            </div>
+          )}
+
+{activityStep === 'closing' && (
+             <div style={u1l6BroadcastClosingWrapStyle}>
+               <div style={u1l6BroadcastClosingLabelStyle}>Weigh the tradeoff</div>
+               <ol style={u1l6BroadcastClosingListStyle}>
+                 {data.closingQuestions.map((q, i) => (
+                   <li key={i} style={u1l6BroadcastClosingItemStyle}>{q}</li>
+                 ))}
+               </ol>
+             </div>
+           )}
+         </div>
+       )
+     }
+
+     function U1L7BroadcastScreen({ state, data }: { state: LiveState; data: U1L7ActivityData }) {
+       return (
+         <div style={fullScreenContainerStyle}>
+           <div style={topBarStyle}>
+             <div>
+               <div style={topEyebrowStyle}>
+                 Look back · Unit {state.lesson.unit} · {state.className}
+               </div>
+               <div style={topTitleStyle}>The four tools you built</div>
+             </div>
+           </div>
+           <U1L7ReflectionActivity data={data} mode="broadcast" />
+         </div>
+       )
+     }
 
 
-function LedgerScreen({ state, meta }: { state: LiveState; meta: LessonMeta | null }) {
+   function LedgerScreen({ state, meta }: { state: LiveState; meta: LessonMeta | null }) {
   const ledger = meta?.ledger
   return (
     <div style={fullScreenContainerStyle}>
@@ -795,4 +1247,446 @@ const broadcastPillsStyle: React.CSSProperties = {
     fontSize: '0.92rem',
     color: 'var(--text-dim)',
     lineHeight: 1.5,
+  }
+
+  const u1l4BroadcastPhaseRowStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '0.75rem',
+    marginBottom: '1.75rem',
+    flexWrap: 'wrap',
+  }
+
+  const u1l4BroadcastPhasePillStyle: React.CSSProperties = {
+    padding: '0.55rem 1.2rem',
+    fontSize: '1rem',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    borderRadius: '999px',
+  }
+
+  const u1l4BroadcastArgsGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+    flex: 1,
+  }
+
+  const u1l4BroadcastArgFullCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '1.5rem 1.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+  }
+
+  const u1l4BroadcastArgCompactCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '1.75rem 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  }
+
+  const u1l4BroadcastArgHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    marginBottom: '0.9rem',
+    width: '100%',
+  }
+
+  const u1l4BroadcastArgBadgeStyle: React.CSSProperties = {
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    background: 'rgba(200, 169, 110, 0.12)',
+    padding: '0.3rem 0.7rem',
+    borderRadius: '4px',
+  }
+
+  const u1l4BroadcastArgCountStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: '1.3rem',
+    color: '#2980b9',
+  }
+
+  const u1l4BroadcastArgLabelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.3rem, 2.2vw, 1.9rem)',
+    color: 'var(--text)',
+    lineHeight: 1.25,
+    marginBottom: '0.9rem',
+  }
+
+  const u1l4BroadcastArgBodyStyle: React.CSSProperties = {
+    fontSize: 'clamp(0.95rem, 1.05vw, 1.1rem)',
+    color: 'var(--text-dim)',
+    lineHeight: 1.6,
+    margin: 0,
+  }
+
+  const u1l4BroadcastKeyScrollStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto',
+    paddingBottom: '1rem',
+  }
+
+  const u1l4BroadcastKeyGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+  }
+
+  const u1l4BroadcastKeyColStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '1.4rem 1.7rem',
+  }
+
+  const u1l4BroadcastKeyHeaderStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.3rem, 2vw, 1.7rem)',
+    color: 'var(--text)',
+    marginBottom: '1rem',
+    paddingBottom: '0.7rem',
+    borderBottom: '2px solid var(--gold)',
+  }
+
+  const u1l4BroadcastKeyGroupLabelStyle: React.CSSProperties = {
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '0.7rem',
+  }
+
+  const u1l4BroadcastKeyEntryStyle: React.CSSProperties = {
+    marginBottom: '0.85rem',
+  }
+
+  const u1l4BroadcastKeyEntryTitleStyle: React.CSSProperties = {
+    fontSize: '1rem',
+    fontWeight: 700,
+    color: 'var(--text)',
+    marginBottom: '0.25rem',
+    lineHeight: 1.4,
+  }
+
+  const u1l4BroadcastKeyEntryBodyStyle: React.CSSProperties = {
+    fontSize: '0.92rem',
+    color: 'var(--text-dim)',
+    lineHeight: 1.55,
+  }
+
+  const u1l5BroadcastPhaseRowStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '0.75rem',
+    marginBottom: '1.75rem',
+    flexWrap: 'wrap',
+  }
+
+  const u1l5BroadcastPhasePillStyle: React.CSSProperties = {
+    padding: '0.55rem 1.2rem',
+    fontSize: '1rem',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    borderRadius: '999px',
+  }
+
+  const u1l5BroadcastPollWrapStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    maxWidth: '72rem',
+    margin: '0 auto',
+    width: '100%',
+  }
+
+  const u1l5BroadcastQuestionStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.4rem, 2.2vw, 1.9rem)',
+    color: 'var(--text)',
+    lineHeight: 1.4,
+    marginBottom: '2.5rem',
+    textAlign: 'center',
+  }
+
+  const u1l5BroadcastTallyGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+  }
+
+  const u1l5BroadcastTallyCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '14px',
+    padding: '2rem 1.75rem',
+    textAlign: 'center',
+  }
+
+  const u1l5BroadcastTallyCountStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(3.5rem, 7vw, 5.5rem)',
+    color: 'var(--gold)',
+    lineHeight: 1,
+    marginBottom: '0.75rem',
+  }
+
+  const u1l5BroadcastTallyLabelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.1rem, 1.5vw, 1.4rem)',
+    color: 'var(--text)',
+    lineHeight: 1.3,
+  }
+
+  const u1l5BroadcastCasesGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+    flex: 1,
+  }
+
+  const u1l5BroadcastCaseCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '2rem 1.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  }
+
+  const u1l5BroadcastCaseHeadStyle: React.CSSProperties = {
+    marginBottom: '1.5rem',
+  }
+
+  const u1l5BroadcastCaseBadgeStyle: React.CSSProperties = {
+    display: 'inline-block',
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.3rem, 1.9vw, 1.7rem)',
+    color: 'var(--text)',
+    marginBottom: '0.5rem',
+    lineHeight: 1.25,
+  }
+
+  const u1l5BroadcastCaseHintStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.92rem',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
+    color: 'var(--gold)',
+    textTransform: 'uppercase',
+  }
+
+  const u1l5BroadcastCaseCountStyle: React.CSSProperties = {
+    fontSize: '1.1rem',
+    color: 'var(--text-dim)',
+  }
+
+  const u1l5BroadcastPairWrapStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    maxWidth: '72rem',
+    margin: '0 auto',
+    width: '100%',
+  }
+
+  const u1l5BroadcastPairInstructionStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.3rem, 2vw, 1.8rem)',
+    color: 'var(--text)',
+    lineHeight: 1.4,
+    marginBottom: '2rem',
+    textAlign: 'center',
+  }
+
+  const u1l5BroadcastPromptsLabelStyle: React.CSSProperties = {
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  }
+
+  const u1l5BroadcastPromptsListStyle: React.CSSProperties = {
+    margin: '0 auto',
+    paddingLeft: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    maxWidth: '60rem',
+  }
+
+  const u1l5BroadcastPromptItemStyle: React.CSSProperties = {
+    fontSize: 'clamp(1rem, 1.3vw, 1.25rem)',
+    color: 'var(--text)',
+    lineHeight: 1.55,
+  }
+
+  const u1l5BroadcastClosingWrapStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    maxWidth: '64rem',
+    margin: '0 auto',
+    width: '100%',
+  }
+
+  const u1l5BroadcastClosingTextStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.6rem, 2.6vw, 2.4rem)',
+    color: 'var(--text)',
+    lineHeight: 1.35,
+    marginBottom: '1.5rem',
+  }
+
+  const u1l5BroadcastClosingSubStyle: React.CSSProperties = {
+    fontSize: 'clamp(1rem, 1.4vw, 1.3rem)',
+    color: 'var(--gold)',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  }
+
+  const u1l6BroadcastPhaseRowStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '0.6rem',
+    marginBottom: '2rem',
+    flexWrap: 'wrap',
+  }
+
+  const u1l6BroadcastPhasePillStyle: React.CSSProperties = {
+    padding: '0.5rem 1.1rem',
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    letterSpacing: '0.03em',
+    borderRadius: '999px',
+  }
+
+  const u1l6BroadcastCenterWrapStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    maxWidth: '72rem',
+    margin: '0 auto',
+    width: '100%',
+  }
+
+  const u1l6BroadcastPrepHeadlineStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(2rem, 3.5vw, 3rem)',
+    color: 'var(--text)',
+    lineHeight: 1.2,
+    marginBottom: '1rem',
+  }
+
+  const u1l6BroadcastPrepSubStyle: React.CSSProperties = {
+    fontSize: 'clamp(1.1rem, 1.6vw, 1.5rem)',
+    color: 'var(--text-dim)',
+    lineHeight: 1.5,
+    maxWidth: '46rem',
+    marginBottom: '2.5rem',
+  }
+
+  const u1l6BroadcastTallyGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+    width: '100%',
+    maxWidth: '56rem',
+  }
+
+  const u1l6BroadcastTallyCardStyle: React.CSSProperties = {
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '14px',
+    padding: '2rem 1.75rem',
+    textAlign: 'center',
+  }
+
+  const u1l6BroadcastTallyCountStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(3rem, 6vw, 5rem)',
+    color: 'var(--gold)',
+    lineHeight: 1,
+    marginBottom: '0.6rem',
+  }
+
+  const u1l6BroadcastTallyLabelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1rem, 1.4vw, 1.3rem)',
+    color: 'var(--text)',
+    lineHeight: 1.3,
+  }
+
+  const u1l6BroadcastRoundHeadlineStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(2.4rem, 5vw, 4rem)',
+    color: 'var(--text)',
+    lineHeight: 1.15,
+    marginBottom: '1.5rem',
+  }
+
+  const u1l6BroadcastRoundInstructionStyle: React.CSSProperties = {
+    fontSize: 'clamp(1.2rem, 1.9vw, 1.7rem)',
+    color: 'var(--text-dim)',
+    lineHeight: 1.5,
+    maxWidth: '54rem',
+  }
+
+  const u1l6BroadcastClosingWrapStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    maxWidth: '64rem',
+    margin: '0 auto',
+    width: '100%',
+  }
+
+  const u1l6BroadcastClosingLabelStyle: React.CSSProperties = {
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: 'var(--gold)',
+    marginBottom: '1.5rem',
+    textAlign: 'center',
+  }
+
+  const u1l6BroadcastClosingListStyle: React.CSSProperties = {
+    margin: '0 auto',
+    paddingLeft: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    maxWidth: '52rem',
+  }
+
+  const u1l6BroadcastClosingItemStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(1.4rem, 2.4vw, 2.1rem)',
+    color: 'var(--text)',
+    lineHeight: 1.3,
   }

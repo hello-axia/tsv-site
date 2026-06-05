@@ -8,9 +8,16 @@ import QuadrantActivityComponent from './quadrant-activity'
 import LedgerEntryComponent from './ledger-entry'
 import U1L2TensionsActivity from './u1-l2-tensions-activity'
 import U1L3ThreadsActivity from './u1-l3-threads-activity'
+import U1L4AuditActivity from './u1-l4-audit-activity'
+import U1L5SteelmanActivity from './u1-l5-steelman-activity'
+import U1L6DeliberationActivity from './u1-l6-deliberation'
+import U1L7ReflectionActivity from './u1-l7-reflection'
 import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
 import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
-
+import type { U1L4ActivityData } from '@/content/lessons/u1-l4.meta'
+import type { U1L5ActivityData } from '@/content/lessons/u1-l5.meta'
+import type { U1L6ActivityData } from '@/content/lessons/u1-l6.meta'
+import type { U1L7ActivityData } from '@/content/lessons/u1-l7.meta'
 type Props = {
     profileId: string
     initialSession: CurrentLiveSession | null
@@ -156,6 +163,35 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
               lessonId={session.lesson.id}
               profileId={profileId}
               data={meta.activity.data as U1L3ActivityData}
+              mode="student"
+            />
+          ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l4' ? (
+            <U1L4AuditActivity
+              assignmentId={session.assignment_id}
+              lessonId={session.lesson.id}
+              profileId={profileId}
+              data={meta.activity.data as U1L4ActivityData}
+              mode="student"
+            />
+          ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l5' ? (
+            <U1L5SteelmanActivity
+              assignmentId={session.assignment_id}
+              lessonId={session.lesson.id}
+              profileId={profileId}
+              data={meta.activity.data as U1L5ActivityData}
+              mode="student"
+            />
+          ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l6' ? (
+            <U1L6DeliberationActivity
+              assignmentId={session.assignment_id}
+              lessonId={session.lesson.id}
+              profileId={profileId}
+              data={meta.activity.data as U1L6ActivityData}
+              mode="student"
+            />
+          ) : meta?.activity?.type === 'custom' && session?.lesson.slug === 'u1-l7' ? (
+            <U1L7ReflectionActivity
+              data={meta.activity.data as U1L7ActivityData}
               mode="student"
             />
           ) : (

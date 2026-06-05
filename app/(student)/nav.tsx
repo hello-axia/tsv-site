@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 
 const NAV = [
-  { label: 'Overview', items: [{ name: 'Dashboard', href: '/student/dashboard' }, { name: 'Today\'s Lesson', href: '/lesson' }, { name: 'Curriculum', href: '/student/curriculum' }, { name: 'Live Session', href: '/student/live' }] },
+  { label: 'Overview', items: [{ name: 'Dashboard', href: '/student/dashboard' }, { name: 'Curriculum', href: '/student/curriculum' }, { name: 'Live Session', href: '/student/live' }] },
   { label: 'Class', items: [{ name: 'Classmates', href: '/student/class' }] },
   { label: 'Settings', items: [{ name: 'Account', href: '/student/account' }] },
 ]

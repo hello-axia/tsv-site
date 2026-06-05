@@ -8,8 +8,16 @@ import QuadrantActivityComponent from '../../(student)/student/live/quadrant-act
 import LedgerEntryComponent from '../../(student)/student/live/ledger-entry'
 import U1L2TensionsActivity from '../../(student)/student/live/u1-l2-tensions-activity'
 import U1L3ThreadsActivity from '../../(student)/student/live/u1-l3-threads-activity'
+import U1L4AuditActivity from '../../(student)/student/live/u1-l4-audit-activity'
+import U1L5SteelmanActivity from '../../(student)/student/live/u1-l5-steelman-activity'
+import U1L6DeliberationActivity from '../../(student)/student/live/u1-l6-deliberation'
+import U1L7ReflectionActivity from '../../(student)/student/live/u1-l7-reflection'
 import type { U1L2ActivityData } from '@/content/lessons/u1-l2.meta'
 import type { U1L3ActivityData } from '@/content/lessons/u1-l3.meta'
+import type { U1L4ActivityData } from '@/content/lessons/u1-l4.meta'
+import type { U1L5ActivityData } from '@/content/lessons/u1-l5.meta'
+import type { U1L6ActivityData } from '@/content/lessons/u1-l6.meta'
+import type { U1L7ActivityData } from '@/content/lessons/u1-l7.meta'
 
 type StepKey = 'briefing' | 'activity' | 'ledger'
 const STEP_ORDER: StepKey[] = ['briefing', 'activity', 'ledger']
@@ -490,6 +498,47 @@ function StepContent({
                 lessonId={lessonId}
                 profileId={profileId}
                 data={meta.activity.data as U1L3ActivityData}
+                mode="teacher"
+              />
+            )
+          }
+          if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l4') {
+            return (
+              <U1L4AuditActivity
+                assignmentId={assignmentId}
+                lessonId={lessonId}
+                profileId={profileId}
+                data={meta.activity.data as U1L4ActivityData}
+                mode="teacher"
+              />
+            )
+          }
+          if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l5') {
+            return (
+              <U1L5SteelmanActivity
+                assignmentId={assignmentId}
+                lessonId={lessonId}
+                profileId={profileId}
+                data={meta.activity.data as U1L5ActivityData}
+                mode="teacher"
+              />
+            )
+          }
+          if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l6') {
+            return (
+              <U1L6DeliberationActivity
+                assignmentId={assignmentId}
+                lessonId={lessonId}
+                profileId={profileId}
+                data={meta.activity.data as U1L6ActivityData}
+                mode="teacher"
+              />
+            )
+          }
+          if (meta?.activity?.type === 'custom' && lessonSlug === 'u1-l7') {
+            return (
+              <U1L7ReflectionActivity
+                data={meta.activity.data as U1L7ActivityData}
                 mode="teacher"
               />
             )
