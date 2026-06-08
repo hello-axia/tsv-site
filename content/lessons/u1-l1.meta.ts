@@ -6,8 +6,19 @@
 
 import type { LessonMeta } from '@/lib/lesson-meta-types'
 
+
 export const meta: LessonMeta = {
   slug: 'u1-l1',
+
+  briefingCascades: {
+    symptoms: [
+      { num: '1', title: 'Trust erodes', body: 'Public trust in the government erodes.' },
+      { num: '2', title: 'The extremes rise', body: 'Politicians who are the most ideologically extreme get pushed into the spotlight.' },
+      { num: '3', title: 'Reason fades', body: 'People become extreme in their beliefs and stop listening to sound reason.' },
+      { num: '4', title: 'Regulators get captured', body: 'Regulators stop answering to the public and start answering to the industries that fund their paycheck.' },
+      { num: '5', title: 'Gridlock costs you', body: 'Congress gridlocks on issues surrounding cost, raising the cost of living for everyone.' },
+    ],
+  },
 
   activity: {
     type: 'quadrant',
@@ -41,4 +52,5 @@ export const meta: LessonMeta = {
     unitCapability: 'thinking_reasoning',
     privacyTier: 1,
   },
+  
 }

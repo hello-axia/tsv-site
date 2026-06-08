@@ -83,6 +83,21 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
           </div>
           <h1>{lesson.title}</h1>
           {teacher?.summary && <p className="prep-summary">{teacher.summary}</p>}
+          {teacher && (
+            <p style={{
+              fontSize: '0.9rem',
+              fontStyle: 'italic',
+              color: 'var(--teacher)',
+              background: 'var(--teacher-bg)',
+              border: '1px solid var(--teacher-border)',
+              borderRadius: '8px',
+              padding: '0.8rem 1.1rem',
+              marginTop: '1.25rem',
+              maxWidth: '42rem',
+            }}>
+              Suggestions while you run the program.
+            </p>
+          )}
         </div>
 
         {/* === STAGE 1: BRIEFING === */}
@@ -121,7 +136,7 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
 
             {teacher?.activity?.guide && (
               <div className="prep-teacher-block">
-                <span className="prep-teacher-flag">For the teacher — activity guide</span>
+                <span className="prep-teacher-flag">About the Activity</span>
                 <h3>Apply: Where Do You Stand?</h3>
                 <div className="prep-activity-meta">
                   <div className="prep-meta-item">
@@ -167,11 +182,10 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
 
             {teacher?.activity?.callOnScripts && teacher.activity.callOnScripts.length > 0 && (
               <div className="prep-teacher-block">
-                <span className="prep-teacher-flag">Teacher script — calling on students</span>
-                <p>
-                  Call on one student per populated quadrant, using the question that matches their
-                  quadrant. If a quadrant is empty, skip it. If one is heavily populated, call on two.
-                </p>
+              <span className="prep-teacher-flag">If you want to call on someone</span>
+              <p>
+                Prompts you could use if you&apos;d like to draw students out.
+              </p>
                 <div className="prep-script-list">
                   {teacher.activity.callOnScripts.map((s, i) => (
                     <div key={i} className="prep-script-row">
@@ -185,8 +199,8 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
 
             {teacher?.activity?.closingScript && (
               <div className="prep-teacher-block">
-                <span className="prep-teacher-flag">Teacher script — closing the activity</span>
-                <p>Adapt to what your class&apos;s distribution actually shows. Fill in your room&apos;s real numbers:</p>
+              <span className="prep-teacher-flag">One way to close</span>
+              <p>If you&apos;d like to wrap up this way, adapt it to what your class actually shows m:</p>
                 <div className="prep-script-spoken">
                   <div className="prep-ss-label">{teacher.activity.closingScript.label}</div>
                   {teacher.activity.closingScript.lines.map((line, i) => (
@@ -198,7 +212,7 @@ export default async function LessonPrepPage({ params }: { params: Promise<{ slu
 
             {teacher?.activity?.facilitationNotes && teacher.activity.facilitationNotes.length > 0 && (
               <div className="prep-teacher-block">
-                <span className="prep-teacher-flag">Facilitation notes</span>
+                <span className="prep-teacher-flag">Worth a heads-up</span>
                 <div className="prep-notes-list">
                   {teacher.activity.facilitationNotes.map((n, i) => (
                     <div key={i} className="prep-note-item">

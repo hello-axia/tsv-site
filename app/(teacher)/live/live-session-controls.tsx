@@ -585,9 +585,9 @@ function StepContent({
         if (!teacher) {
           return (
             <Backdrop onClose={onClose}>
-              <PanelHeader title="Teacher notes" onClose={onClose} />
+              <PanelHeader title="Teaching support" onClose={onClose} />
               <p style={{ color: 'var(--text-faint)', fontSize: '0.95rem' }}>
-                No teacher notes authored for this lesson yet.
+                No teaching support authored for this lesson yet.
               </p>
             </Backdrop>
           )
@@ -597,7 +597,10 @@ function StepContent({
       
         return (
           <Backdrop onClose={onClose}>
-            <PanelHeader title={`Teacher notes · ${stepLabel}`} onClose={onClose} />
+            <PanelHeader title={`Teaching support · ${stepLabel}`} onClose={onClose} />
+            <p style={supportFramingStyle}>
+              Suggestions while running the program.
+            </p>
       
             {step === 'briefing' && (
               teacher.briefing?.notes ? (
@@ -615,14 +618,14 @@ function StepContent({
               <>
                 {teacher.activity.guide && (
                   <div style={panelBlockStyle}>
-                    <div style={panelSectionLabelStyle}>Activity guide</div>
+                    <div style={panelSectionLabelStyle}>About the Activity</div>
                     <div dangerouslySetInnerHTML={{ __html: teacher.activity.guide }} />
                   </div>
                 )}
       
                 {teacher.activity.callOnScripts && teacher.activity.callOnScripts.length > 0 && (
                   <div style={panelBlockStyle}>
-                    <div style={panelSectionLabelStyle}>Call on students</div>
+                    <div style={panelSectionLabelStyle}>If you want to call on someone</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
                       {teacher.activity.callOnScripts.map((s, i) => (
                         <div key={i} style={panelScriptRowStyle}>
@@ -645,7 +648,7 @@ function StepContent({
       
                 {teacher.activity.facilitationNotes && teacher.activity.facilitationNotes.length > 0 && (
                   <div style={panelBlockStyle}>
-                    <div style={panelSectionLabelStyle}>Facilitation notes</div>
+                    <div style={panelSectionLabelStyle}>Worth a heads-up</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                       {teacher.activity.facilitationNotes.map((n, i) => (
                         <div key={i} style={panelNoteStyle}>
@@ -828,6 +831,18 @@ const notesBtnStyle: React.CSSProperties = {
     textTransform: 'uppercase',
     color: 'var(--teacher)',
     marginBottom: '0.6rem',
+  }
+
+  const supportFramingStyle: React.CSSProperties = {
+    fontSize: '0.85rem',
+    lineHeight: 1.5,
+    color: 'var(--text-dim)',
+    fontStyle: 'italic',
+    background: 'var(--teacher-bg)',
+    border: '1px solid var(--teacher-border)',
+    borderRadius: '8px',
+    padding: '0.75rem 0.95rem',
+    marginBottom: '1.25rem',
   }
   
   const panelScriptRowStyle: React.CSSProperties = {

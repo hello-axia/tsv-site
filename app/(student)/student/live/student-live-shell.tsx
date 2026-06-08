@@ -18,6 +18,8 @@ import type { U1L4ActivityData } from '@/content/lessons/u1-l4.meta'
 import type { U1L5ActivityData } from '@/content/lessons/u1-l5.meta'
 import type { U1L6ActivityData } from '@/content/lessons/u1-l6.meta'
 import type { U1L7ActivityData } from '@/content/lessons/u1-l7.meta'
+
+
 type Props = {
     profileId: string
     initialSession: CurrentLiveSession | null
@@ -125,7 +127,7 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
           isCurrent={currentStep === 'briefing'}
         >
           {briefingHtml ? (
-            <div className="lesson-reading" dangerouslySetInnerHTML={{ __html: briefingHtml }} />
+            <BriefingReader html={briefingHtml} meta={meta} />
           ) : (
             <div className="lesson-reading">
               <p style={{ color: 'var(--text-faint)' }}>(No briefing content for this lesson yet.)</p>
@@ -229,6 +231,68 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
 }
 
 // --- Subcomponents ---
+// Renders briefing prose, replacing each <!--CASCADE:key--> marker with a
+// stateful React cascade fed by typed data from meta.briefingCascades[key].
+// No HTML parsing of the cascade itself → no hydration mismatch. State lives in
+// React, so the 3s poll re-render cannot advance the reveal. SAFE BY DEFAULT:
+// archive + teacher surfaces never mount this and render the plain prose.
+function BriefingReader({ html, meta }: { html: string; meta: LessonMeta | null }) {
+  const cascades = meta?.briefingCascades ?? {}
+  // Split prose on cascade markers. String.split with a capturing group is a pure
+  // function of `html` — no stateful /g regex, so SSR and client produce identical
+  // segments and hydration matches. Odd indices are captured cascade keys.
+  const segments: Array<{ type: 'html'; html: string } | { type: 'cascade'; key: string }> = []
+  const pieces = html.split(/<!--CASCADE:([\w-]+)-->/)
+  pieces.forEach((piece, idx) => {
+    if (idx % 2 === 1) {
+      segments.push({ type: 'cascade', key: piece })
+    } else {
+      const chunk = piece.trim()
+      if (chunk) segments.push({ type: 'html', html: chunk })
+    }
+  })
+
+  return (
+    <div className="lesson-reading">
+      {segments.map((seg, i) =>
+        seg.type === 'html' ? (
+          <div key={i} dangerouslySetInnerHTML={{ __html: seg.html }} />
+        ) : (
+          <SymptomCascade key={i} stages={cascades[seg.key] ?? []} />
+        )
+      )}
+    </div>
+  )
+}
+
+// Stateful cascade from typed data. One click = one increment. Immune to re-renders.
+function SymptomCascade({ stages }: { stages: { num: string; title: string; body: string }[] }) {
+  const [revealed, setRevealed] = useState(1)
+  if (stages.length === 0) return null
+  return (
+    <div className="lesson-cascade is-interactive">
+      {stages.map((s, i) => (
+        <div key={i} className={`lesson-cascade-stage${i < revealed ? ' revealed' : ''}`}>
+          <div className="lesson-cascade-num">{s.num}</div>
+          <div className="lesson-cascade-content">
+            <strong>{s.title}</strong>
+            <p>{s.body}</p>
+          </div>
+        </div>
+      ))}
+      {revealed < stages.length && (
+        <button
+          type="button"
+          className="lesson-cascade-next"
+          style={{ display: 'inline-block' }}
+          onClick={() => setRevealed((n) => Math.min(n + 1, stages.length))}
+        >
+          See the next →
+        </button>
+      )}
+    </div>
+  )
+}
 
 function ProgressSteps({ currentIdx }: { currentIdx: number }) {
   const labels = ['Briefing', 'Activity', 'Ledger']

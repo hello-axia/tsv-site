@@ -493,15 +493,25 @@ a:hover { opacity: 0.75; }
   margin: 1.5rem 0 1.75rem;
 }
 .lesson-cascade-stage {
-  display: none;
+  display: flex;
   gap: 1rem;
   align-items: flex-start;
   padding: 1rem 0;
   border-bottom: 1px solid var(--border);
+}
+/* Interactive (student live only): JS adds .is-interactive to enable step-through.
+   Without it (archive, teacher views, no-JS), all stages stay visible. */
+.lesson-cascade.is-interactive > .lesson-cascade-stage {
+  display: none;
+}
+.lesson-cascade.is-interactive > .lesson-cascade-stage.revealed {
+  display: flex;
   animation: lesson-cascade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.lesson-cascade-stage.revealed {
-  display: flex;
+@media (prefers-reduced-motion: reduce) {
+  .lesson-cascade.is-interactive > .lesson-cascade-stage.revealed {
+    animation: none;
+  }
 }
 .lesson-cascade-num {
   font-family: var(--font-display);
@@ -526,6 +536,7 @@ a:hover { opacity: 0.75; }
   line-height: 1.65;
 }
 .lesson-cascade-next {
+  display: none; /* shown only in interactive mode, toggled by JS */
   margin-top: 1rem;
   padding: 0.65rem 1.1rem;
   background: transparent;
@@ -552,14 +563,26 @@ a:hover { opacity: 0.75; }
   to { opacity: 1; }
 }
 
-/* Big emphasis line */
+/* Big emphasis line — a pivot beat in the reading. Sits with air around it. */
 .lesson-emphasis-line {
   font-family: var(--font-display);
-  font-size: 1.5rem !important;
-  line-height: 1.25;
+  font-size: 1.9rem !important;
+  line-height: 1.3;
   color: var(--text);
   text-align: center;
-  margin: 1.75rem 0 !important;
+  max-width: 30rem;
+  margin: 3.5rem auto !important;
+  padding: 0 1rem;
+  position: relative;
+}
+/* A short gold rule above, centered — a visual "stop" cue. */
+.lesson-emphasis-line::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+  margin: 0 auto 1.5rem;
 }
 
 /* Warning list with icons */

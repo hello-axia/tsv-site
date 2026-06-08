@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import ClassSelector from '../_components/class-selector'
 import AssignButton from './assign-button'
+import ReassignButton from './reassign-button'
 import ActiveLessonBanner from './active-lesson-banner'
 import { CURRICULUM, LESSON_COUNT } from '@/lib/curriculum'
 
@@ -127,8 +128,11 @@ export default async function CurriculumPage() {
                     </span>
                     {row && published && selectedClassId ? (
                       lessonStatus === 'completed' ? (
-                        <span style={badgeStyle('#4a8a5a', 'rgba(106,191,123,0.12)', 'rgba(106,191,123,0.3)')}>
-                          ✓ Completed
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span style={badgeStyle('#4a8a5a', 'rgba(106,191,123,0.12)', 'rgba(106,191,123,0.3)')}>
+                            ✓ Completed
+                          </span>
+                          <ReassignButton assignmentId={assignment!.id} disabled={!!currentAssignment} />
                         </span>
                       ) : lessonStatus === 'live' || lessonStatus === 'paused' ? (
                         <span style={badgeStyle('var(--gold)', 'var(--gold-dim)', 'var(--gold)')}>
