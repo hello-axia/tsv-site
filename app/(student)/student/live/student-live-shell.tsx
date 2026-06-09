@@ -231,38 +231,34 @@ const LESSON_TYPE_LABELS: Record<string, string> = {
 }
 
 // --- Subcomponents ---
-// Renders briefing prose, replacing each <!--CASCADE:key--> marker with a
-// stateful React cascade fed by typed data from meta.briefingCascades[key].
-// No HTML parsing of the cascade itself → no hydration mismatch. State lives in
-// React, so the 3s poll re-render cannot advance the reveal. SAFE BY DEFAULT:
-// archive + teacher surfaces never mount this and render the plain prose.
+// Renders briefing prose, replacing <!--CASCADE:key--> and <!--EXPAND:key--> markers
+// with interactive React. State lives in React/DOM so the 3s poll can't disturb it.
+// SAFE BY DEFAULT: archive + teacher prep use renderStaticBriefing (all content visible).
 function BriefingReader({ html, meta }: { html: string; meta: LessonMeta | null }) {
   const cascades = meta?.briefingCascades ?? {}
-  // Split prose on cascade markers. String.split with a capturing group is a pure
-  // function of `html` — no stateful /g regex, so SSR and client produce identical
-  // segments and hydration matches. Odd indices are captured cascade keys.
-  const segments: Array<{ type: 'html'; html: string } | { type: 'cascade'; key: string }> = []
-  const pieces = html.split(/<!--CASCADE:([\w-]+)-->/)
-  pieces.forEach((piece, idx) => {
-    if (idx % 2 === 1) {
-      segments.push({ type: 'cascade', key: piece })
-    } else {
-      const chunk = piece.trim()
-      if (chunk) segments.push({ type: 'html', html: chunk })
-    }
-  })
+  const expandables = meta?.briefingExpandables ?? {}
+  const pieces = html.split(/<!--(CASCADE|EXPAND):([\w-]+)-->/)
 
-  return (
-    <div className="lesson-reading">
-      {segments.map((seg, i) =>
-        seg.type === 'html' ? (
-          <div key={i} dangerouslySetInnerHTML={{ __html: seg.html }} />
-        ) : (
-          <SymptomCascade key={i} stages={cascades[seg.key] ?? []} />
-        )
-      )}
-    </div>
-  )
+  const segs: React.ReactNode[] = []
+  let i = 0
+  let k = 0
+  while (i < pieces.length) {
+    const text = (pieces[i] ?? '').trim()
+    if (text) segs.push(<div key={`h${k++}`} dangerouslySetInnerHTML={{ __html: text }} />)
+    const kind = pieces[i + 1]
+    const key = pieces[i + 2]
+    if (kind && key) {
+      if (kind === 'CASCADE') {
+        segs.push(<SymptomCascade key={`c${k++}`} stages={cascades[key] ?? []} />)
+      } else {
+        segs.push(<ExpandableList key={`e${k++}`} items={expandables[key] ?? []} />)
+      }
+      i += 3
+    } else {
+      i += 1
+    }
+  }
+  return <div className="lesson-reading">{segs}</div>
 }
 
 // Stateful cascade from typed data. One click = one increment. Immune to re-renders.
@@ -290,6 +286,26 @@ function SymptomCascade({ stages }: { stages: { num: string; title: string; body
           See the next →
         </button>
       )}
+    </div>
+  )
+}
+
+// Expandable framework list. Uses native <details> (uncontrolled) — open state
+// lives in the DOM, immune to the 3s poll, and SSR/client agree (both start closed).
+function ExpandableList({ items }: { items: { icon?: string; title: string; body: string }[] }) {
+  if (items.length === 0) return null
+  return (
+    <div className="lesson-framework-list">
+      {items.map((it, i) => (
+        <details key={i} className="lesson-framework-row">
+          <summary>
+            {it.icon && <span className="lesson-fw-icon">{it.icon}</span>}
+            <span className="lesson-fw-title">{it.title}</span>
+            <span className="lesson-fw-toggle" />
+          </summary>
+          <div className="lesson-fw-body" dangerouslySetInnerHTML={{ __html: it.body }} />
+        </details>
+      ))}
     </div>
   )
 }

@@ -56,8 +56,9 @@ export type QuadrantActivity = {
   }
   
   export type LessonMeta = {
-      slug: string
-      briefingCascades?: Record<string, { num: string; title: string; body: string }[]>
+    slug: string
+    briefingCascades?: Record<string, { num: string; title: string; body: string }[]>
+    briefingExpandables?: Record<string, { icon?: string; title: string; body: string }[]>
       activity?: ActivityMeta
       ledger?: LedgerMeta
       // Per-stage header overrides. If a stage is omitted (or a field within it

@@ -32,6 +32,15 @@ export type U1L4ActivityData = {
 export const meta: LessonMeta = {
   slug: 'u1-l4',
 
+  briefingExpandables: {
+    harderToDefend: [
+      { title: '"No previous generation could understand."', body: 'This statement is unfalsifiable. What it is doing is making any older person&rsquo;s view sound out of touch with the current situation.' },
+      { title: '"Blaming social media is convenient."', body: 'Although it might be true, it does not engage with the evidence that social media might be harmful. It only asserts that it is convenient, but does not worry whether or not it is correct.' },
+      { title: '"Some teenagers are months away from being adults."', body: 'By the same logic, 17-year-olds should also be able to drink, sign mortgages, or enlist in combat roles. The "almost 18" argument proves too much &mdash; it would erase every age line that protects minors, not just the social media one.' },
+      { title: '"Politicians who don\'t use or understand the platform."', body: 'This is an attack on the people making the argument, not the argument itself. A politician who doesn\'t use TikTok or Instagram Reels can still be right about the effect it has on kids. And the inverse &mdash; a teenager who uses TikTok every day can still be wrong about what it\'s doing to her. Familiarity with something is not the same as understanding it.' },
+    ],
+  },
+
   framing: {
     activity: {
       flag: 'Audit your own side',

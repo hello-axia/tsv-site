@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { getLessonContentHtml } from '@/lib/lesson-content'
 import type { LessonMeta } from '@/lib/lesson-meta-types'
+import { renderStaticBriefing } from '@/lib/briefing-render'
 import SubmissionReview from './submission-review'
 
 const LESSON_TYPE_LABELS: Record<string, string> = {
@@ -107,11 +108,11 @@ export default async function StudentLessonArchivePage({ params }: { params: Pro
 
       {/* Briefing — always shown for published lessons */}
       <Section title="The Briefing">
-        {briefingHtml ? (
-          <div className="lesson-reading" dangerouslySetInnerHTML={{ __html: briefingHtml }} />
-        ) : (
-          <p style={{ color: 'var(--text-faint)' }}>No briefing content for this lesson.</p>
-        )}
+      {briefingHtml ? (
+            renderStaticBriefing(briefingHtml, meta)
+          ) : (
+            <p style={{ color: 'var(--text-faint)' }}>No briefing content authored yet.</p>
+          )}
       </Section>
 
       {/* Activity review — completed only, and only if the lesson has an activity */}

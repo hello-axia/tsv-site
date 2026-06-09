@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { renderStaticBriefing } from '@/lib/briefing-render'
 import type { LessonMeta, LessonTeacherNotes } from '@/lib/lesson-meta-types'
 import QuadrantActivityComponent from '../../(student)/student/live/quadrant-activity'
 import LedgerEntryComponent from '../../(student)/student/live/ledger-entry'
@@ -465,7 +466,7 @@ function StepContent({
   }) {
     if (step === 'briefing') {
       return briefingHtml
-        ? <div className="lesson-reading" dangerouslySetInnerHTML={{ __html: briefingHtml }} />
+        ? renderStaticBriefing(briefingHtml, meta)
         : <div className="lesson-reading"><p style={{ color: 'var(--text-faint)' }}>(No briefing content for this lesson yet.)</p></div>
     }
     if (step === 'activity') {

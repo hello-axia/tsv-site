@@ -616,6 +616,56 @@ a:hover { opacity: 0.75; }
   font-weight: 600;
 }
 
+/* Two-views inside the reading canvas: break out of the 38rem prose cap so
+   side-by-side columns aren't squished. Scoped to .lesson-reading only. */
+   .lesson-reading .lesson-two-views {
+    max-width: none;
+    width: 100%;
+    gap: 1.25rem;
+  }
+  .lesson-reading .lesson-two-views .lesson-view p {
+    max-width: none; /* override the .lesson-reading p 38rem cap inside the columns */
+  }
+/* Non-partisan view colors — gold + slate. Avoids red/blue party association. */
+.lesson-view-gold { border-top-color: var(--gold); }
+.lesson-view-slate { border-top-color: var(--text-dim); }
+.lesson-view-gold .lesson-view-label { color: var(--gold); }
+.lesson-view-slate .lesson-view-label { color: var(--text-dim); }
+.lesson-reading .lesson-view p + p {
+  margin-top: 0.85rem !important;
+}
+
+/* Specimen box — a planted argument/document set apart for the student to
+   examine critically, distinct from the lesson's own voice. */
+   .lesson-reading .lesson-specimen {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin: 1.75rem 0;
+    position: relative;
+    max-width: none;
+  }
+  .lesson-reading .lesson-specimen p {
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin: 0;
+    max-width: none;
+  }
+  .lesson-reading .lesson-specimen .lesson-specimen-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.2rem 0.55rem;
+    margin-bottom: 0.9rem;
+  }
 /* Recognize prompt */
 .lesson-recognize {
   margin: 0.5rem 0 1.75rem;
@@ -1153,9 +1203,9 @@ a:hover { opacity: 0.75; }
   
   .lesson-reading .data-callout .data-row {
     display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    padding: 0.5rem 0;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 0.65rem 0;
     border-top: 1px solid var(--border);
   }
   
@@ -1167,8 +1217,10 @@ a:hover { opacity: 0.75; }
   .lesson-reading .data-callout .data-fig {
     font-family: var(--font-display);
     font-size: 1.55rem;
+    line-height: 1.2;
     color: var(--text);
-    min-width: 5.5rem;
+    flex: 0 0 8.5rem;
+    width: 8.5rem;
   }
   
   .lesson-reading .data-callout .data-desc {
@@ -1629,3 +1681,28 @@ a:hover { opacity: 0.75; }
   padding: 0.7rem 0.95rem;
 }
 .prep-tier-note strong { color: var(--text); font-weight: 600; }
+
+/* Lists in briefing prose — match the paragraph rhythm and prose cap */
+.lesson-reading ul,
+.lesson-reading ol {
+  max-width: 38rem;
+  margin: 0 0 1.4rem;
+  padding-left: 1.4rem;
+}
+
+.lesson-reading li {
+  font-family: var(--font-body);
+  font-size: var(--read-size);
+  line-height: var(--read-line);
+  color: var(--ink-soft);
+  margin-bottom: 0.6rem;
+}
+
+.lesson-reading li:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-reading li strong {
+  color: var(--text);
+  font-weight: 600;
+}

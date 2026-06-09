@@ -35,6 +35,17 @@ export type U1L2ActivityData = {
 export const meta: LessonMeta = {
   slug: 'u1-l2',
 
+  briefingExpandables: {
+    tensions: [
+      { icon: '1', title: 'Liberty vs. Equality', body: 'Should the system protect people&rsquo;s freedom to act, or work to make outcomes fairer? Taxes, affirmative action, school funding, healthcare &mdash; this tension underlies all of them.' },
+      { icon: '2', title: 'Liberty vs. Order', body: 'How much freedom do we give up for safety and stability? Surveillance laws, gun laws, drug policy, public health mandates, policing disputes &mdash; these are all variations of this tension.' },
+      { icon: '3', title: 'Majority Rule vs. Minority Rights', body: 'Are there certain rights that are secured to the minority, even if the majority have decided in a fair vote? The Electoral College, religious exemptions, free speech protection on unpopular views, protection of immigrant rights &mdash; these tensions live here.' },
+      { icon: '4', title: 'Individual vs. Community', body: 'Is the basic unit of politics the person, or the group they belong to? Mask mandates, zoning laws, gun rights, parental rights in schools &mdash; all of these ask whether your choice is yours, or do you also have responsibility for the people around you.' },
+      { icon: '5', title: 'Centralized vs. Decentralized Power', body: 'Some policies sit at the national level, while others sit closer to home. Who decides? Federal government, state government, the school board? An example: abortion after Dobbs. The question is not &ldquo;what is the policy&rdquo; but &ldquo;who gets to set the policy?&rdquo;' },
+      { icon: '6', title: 'Tradition vs. Progress', body: 'When do we keep what works, and when do we need to change it? Marriage laws, the Constitution, school curricula, the structure of the Senate &mdash; every reform debate has this tension nudged in it.' },
+    ],
+  },
+
   activity: {
     type: 'custom',
     label: 'Liberty vs. Equality — three scenarios',
